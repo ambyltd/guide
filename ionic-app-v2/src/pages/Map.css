@@ -1,0 +1,202 @@
+/*
+ * Page Carte Interactive - Styles
+ */
+
+.map-container {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* Loading */
+.map-loading {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+}
+
+/* Markers personnalisés */
+.custom-marker {
+  cursor: pointer;
+  width: 40px;
+  height: 40px;
+}
+
+.marker-icon {
+  width: 40px;
+  height: 40px;
+  background: var(--ion-color-primary);
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+  transition: transform 0.2s;
+}
+
+.marker-icon svg {
+  transform: rotate(45deg);
+  width: 24px;
+  height: 24px;
+  color: white;
+}
+
+.custom-marker:hover .marker-icon {
+  transform: rotate(-45deg) scale(1.1);
+}
+
+/* Marker utilisateur */
+.user-marker {
+  width: 20px;
+  height: 20px;
+  background: #4285f4;
+  border: 3px solid white;
+  border-radius: 50%;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  position: relative;
+}
+
+.user-marker-pulse {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: #4285f4;
+  opacity: 0.3;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.3;
+  }
+  50% {
+    transform: scale(2);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0;
+  }
+}
+
+/* Popup Mapbox personnalisée */
+.mapboxgl-popup-content {
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  max-width: 250px;
+}
+
+.popup-content h3 {
+  margin: 0 0 8px 0;
+  font-size: 1.1rem;
+  color: var(--ion-color-dark);
+}
+
+.popup-content p {
+  margin: 0 0 12px 0;
+  font-size: 0.9rem;
+  color: var(--ion-color-medium);
+}
+
+.popup-button {
+  width: 100%;
+  padding: 8px 16px;
+  background: var(--ion-color-primary);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.popup-button:hover {
+  background: var(--ion-color-primary-shade);
+}
+
+/* Carte de l'attraction sélectionnée */
+.selected-attraction-card {
+  position: absolute;
+  bottom: 20px;
+  left: 10px;
+  right: 10px;
+  max-width: 400px;
+  margin: 0 auto;
+  z-index: 1000;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+.close-card-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 1;
+  --background: rgba(0, 0, 0, 0.1);
+  --border-radius: 50%;
+}
+
+.card-meta {
+  display: flex;
+  gap: 10px;
+  margin: 15px 0;
+  flex-wrap: wrap;
+}
+
+.card-meta ion-chip {
+  margin: 0;
+}
+
+/* Contrôles Mapbox */
+.mapboxgl-ctrl-top-right {
+  top: 10px;
+  right: 10px;
+}
+
+.mapboxgl-ctrl-bottom-right {
+  bottom: 70px;
+  right: 10px;
+}
+
+/* Responsive */
+@media (min-width: 768px) {
+  .selected-attraction-card {
+    left: 20px;
+    bottom: 30px;
+    right: auto;
+    max-width: 350px;
+  }
+
+  .map-loading {
+    padding: 40px;
+  }
+}
+
+/* Mode sombre */
+@media (prefers-color-scheme: dark) {
+  .map-loading {
+    background: rgba(0, 0, 0, 0.95);
+    color: white;
+  }
+
+  .popup-content h3 {
+    color: var(--ion-color-light);
+  }
+}

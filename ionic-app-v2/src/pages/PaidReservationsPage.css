@@ -1,0 +1,274 @@
+/**
+ * Styles pour la page des réservations payantes
+ */
+
+.paid-reservations-content {
+  --background: #f8f9fa;
+}
+
+.reservations-header {
+  padding: 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  text-align: center;
+}
+
+.reservations-header h1 {
+  margin: 0 0 8px 0;
+  font-size: 1.8rem;
+  font-weight: 600;
+}
+
+.reservations-header p {
+  margin: 0 0 20px 0;
+  opacity: 0.9;
+  font-size: 0.95rem;
+}
+
+.reservations-segment {
+  --background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 4px;
+}
+
+.reservations-segment ion-segment-button {
+  --color: rgba(255, 255, 255, 0.7);
+  --color-checked: #667eea;
+  --background-checked: white;
+  --border-radius: 8px;
+  margin: 0 2px;
+  font-weight: 500;
+}
+
+.attractions-content {
+  padding: 16px;
+}
+
+.attraction-card {
+  margin-bottom: 16px;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease;
+}
+
+.attraction-card:hover {
+  transform: translateY(-2px);
+}
+
+.attraction-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+.attraction-info h2 {
+  margin: 0 0 4px 0;
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.attraction-category {
+  margin: 0 0 8px 0;
+  color: #667eea;
+  font-weight: 500;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.attraction-description {
+  margin: 0;
+  color: #666;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+.attraction-price {
+  text-align: right;
+  flex-shrink: 0;
+  margin-left: 16px;
+}
+
+.price-current {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #2c3e50;
+}
+
+.price-original {
+  font-size: 1.1rem;
+  color: #999;
+  text-decoration: line-through;
+  display: block;
+}
+
+.price-discounted {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #e74c3c;
+  display: block;
+}
+
+.attraction-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.attraction-details ion-chip {
+  --background: rgba(102, 126, 234, 0.1);
+  --color: #667eea;
+  font-size: 0.85rem;
+}
+
+.attraction-features {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 20px;
+}
+
+.attraction-features ion-badge {
+  --background: #f1f3f4;
+  --color: #5f6368;
+  font-size: 0.8rem;
+  padding: 4px 8px;
+  border-radius: 8px;
+}
+
+.download-progress {
+  margin: 16px 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.download-progress span {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #667eea;
+  min-width: 40px;
+}
+
+.attraction-actions {
+  margin-top: 16px;
+}
+
+.purchased-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.purchased-actions ion-button {
+  flex: 1;
+}
+
+.login-required {
+  text-align: center;
+  padding: 40px 20px;
+  max-width: 400px;
+  margin: 40px auto;
+}
+
+.login-icon {
+  font-size: 4rem;
+  color: #667eea;
+  margin-bottom: 16px;
+}
+
+.login-required h2 {
+  margin: 0 0 12px 0;
+  color: #2c3e50;
+  font-size: 1.5rem;
+}
+
+.login-required p {
+  margin: 0 0 24px 0;
+  color: #666;
+  line-height: 1.5;
+}
+
+.auth-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.auth-note {
+  margin-top: 16px !important;
+  font-size: 0.9rem;
+  color: #888;
+  font-style: italic;
+}
+
+.auth-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.auth-actions ion-button[size="small"] {
+  --padding-top: 8px;
+  --padding-bottom: 8px;
+  font-size: 0.9rem;
+}
+
+.loading-state, .error-state, .empty-state {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.loading-state ion-spinner {
+  width: 40px;
+  height: 40px;
+  margin-bottom: 16px;
+}
+
+.loading-state p {
+  color: #666;
+  margin: 0;
+}
+
+.error-state p {
+  color: #e74c3c;
+  margin-bottom: 16px;
+}
+
+.empty-icon {
+  font-size: 4rem;
+  color: #bbb;
+  margin-bottom: 16px;
+}
+
+.empty-state h3 {
+  margin: 0 0 12px 0;
+  color: #666;
+  font-size: 1.3rem;
+}
+
+.empty-state p {
+  margin: 0;
+  color: #999;
+  line-height: 1.5;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .attraction-header {
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .attraction-price {
+    text-align: left;
+    margin-left: 0;
+  }
+  
+  .purchased-actions {
+    flex-direction: column;
+  }
+}

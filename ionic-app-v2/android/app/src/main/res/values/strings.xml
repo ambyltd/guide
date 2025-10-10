@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Audioguide CI Test</string>
+    <string name="title_activity_main">Audioguide CI Test</string>
+    <string name="package_name">com.cotedivoire.audioguidetest</string>
+    <string name="custom_url_scheme">com.cotedivoire.audioguidetest</string>
+</resources>

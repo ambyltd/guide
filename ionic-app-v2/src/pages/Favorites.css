@@ -1,0 +1,201 @@
+/*
+ * Page Favoris - Styles
+ */
+
+.favorites-container {
+  padding: 10px;
+}
+
+.favorites-header {
+  padding: 20px 10px;
+  text-align: center;
+}
+
+.favorites-header h2 {
+  margin: 0;
+  font-size: 1.3rem;
+  color: var(--ion-color-dark);
+}
+
+/* Loading */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 60px 20px;
+}
+
+.loading-container ion-spinner {
+  margin-bottom: 20px;
+}
+
+/* Empty state */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 60px 20px;
+  text-align: center;
+}
+
+.empty-icon {
+  font-size: 5rem;
+  color: var(--ion-color-medium);
+  margin-bottom: 20px;
+}
+
+.empty-state h2 {
+  color: var(--ion-color-dark);
+  margin-bottom: 10px;
+}
+
+.empty-state p {
+  color: var(--ion-color-medium);
+  margin-bottom: 30px;
+}
+
+.empty-state ion-button {
+  max-width: 300px;
+}
+
+/* Carte favorite */
+.favorite-card {
+  margin-bottom: 15px;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.favorite-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.favorite-image {
+  position: relative;
+  width: 100%;
+  height: 200px;
+  background-size: cover;
+  background-position: center;
+  cursor: pointer;
+}
+
+.favorite-image::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.3) 100%);
+}
+
+.category-chip {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 2;
+  font-weight: 600;
+}
+
+.remove-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 2;
+  --background: rgba(255, 255, 255, 0.3);
+  --border-radius: 50%;
+  backdrop-filter: blur(10px);
+}
+
+.remove-button ion-icon {
+  font-size: 1.5rem;
+}
+
+/* Contenu carte */
+ion-card-header {
+  cursor: pointer;
+}
+
+ion-card-title {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: var(--ion-color-dark);
+  margin-bottom: 8px;
+}
+
+ion-card-subtitle {
+  font-size: 0.9rem;
+  color: var(--ion-color-medium);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Métadonnées */
+.favorite-meta {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 15px;
+  flex-wrap: wrap;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.9rem;
+  color: var(--ion-color-medium);
+}
+
+.meta-item ion-icon {
+  font-size: 1.1rem;
+}
+
+/* Actions */
+.favorite-actions {
+  display: flex;
+  gap: 10px;
+  flex-direction: column;
+}
+
+.favorite-actions ion-button {
+  margin: 0;
+  font-weight: 600;
+}
+
+/* Responsive */
+@media (min-width: 768px) {
+  .favorite-image {
+    height: 250px;
+  }
+
+  .favorite-actions {
+    flex-direction: row;
+  }
+
+  .favorite-actions ion-button:first-child {
+    flex: 2;
+  }
+
+  .favorite-actions ion-button:not(:first-child) {
+    flex: 1;
+  }
+}
+
+/* Mode sombre */
+@media (prefers-color-scheme: dark) {
+  .favorite-card {
+    background: var(--ion-color-step-50);
+  }
+
+  .favorites-header h2 {
+    color: var(--ion-color-light);
+  }
+}

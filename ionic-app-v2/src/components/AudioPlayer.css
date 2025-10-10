@@ -1,0 +1,229 @@
+/**
+ * Styles pour AudioPlayer
+ */
+
+.audio-player-modal {
+  --height: 90%;
+  --border-radius: 16px 16px 0 0;
+}
+
+.audio-player-content {
+  --padding-top: 16px;
+  --padding-bottom: 16px;
+}
+
+/* Container principal */
+.player-container {
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  gap: 24px;
+}
+
+/* Artwork */
+.artwork-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px 0;
+}
+
+.artwork {
+  width: 280px;
+  height: 280px;
+  border-radius: 16px;
+  object-fit: cover;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.artwork-placeholder {
+  width: 280px;
+  height: 280px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, var(--ion-color-primary) 0%, var(--ion-color-secondary) 100%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.artwork-placeholder ion-icon {
+  font-size: 80px;
+  color: white;
+  opacity: 0.8;
+}
+
+/* Info */
+.player-info {
+  text-align: center;
+  padding: 0 16px;
+}
+
+.player-info h2 {
+  font-size: 24px;
+  font-weight: 600;
+  margin: 0 0 8px 0;
+  color: var(--ion-text-color);
+}
+
+.player-info p {
+  font-size: 14px;
+  color: var(--ion-color-medium);
+  margin: 0 0 12px 0;
+  line-height: 1.5;
+}
+
+.player-info ion-chip {
+  margin: 4px;
+}
+
+/* Progress */
+.progress-container {
+  padding: 0 16px;
+}
+
+.time-display {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--ion-color-medium);
+  margin-bottom: 8px;
+}
+
+.progress-range {
+  --bar-height: 4px;
+  --bar-background: var(--ion-color-light);
+  --bar-background-active: var(--ion-color-primary);
+  --knob-size: 16px;
+  --knob-background: var(--ion-color-primary);
+  padding: 0;
+}
+
+/* Controls */
+.player-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 40px;
+  padding: 16px 0;
+}
+
+.play-button {
+  --background: var(--ion-color-primary);
+  --background-activated: var(--ion-color-primary-shade);
+  --box-shadow: 0 4px 12px rgba(var(--ion-color-primary-rgb), 0.4);
+  width: 80px;
+  height: 80px;
+  font-size: 32px;
+}
+
+.player-controls ion-button:not(.play-button) {
+  --color: var(--ion-color-medium);
+  font-size: 28px;
+}
+
+/* Additional controls */
+.additional-controls {
+  border-top: 1px solid var(--ion-color-light);
+  border-bottom: 1px solid var(--ion-color-light);
+  padding: 16px 0;
+}
+
+.additional-controls ion-item {
+  --padding-start: 16px;
+  --padding-end: 16px;
+  --inner-padding-end: 0;
+}
+
+.additional-controls ion-range {
+  --bar-height: 3px;
+  --bar-background: var(--ion-color-light);
+  --bar-background-active: var(--ion-color-primary);
+  --knob-size: 14px;
+  flex: 1;
+  margin: 0 16px;
+}
+
+.additional-controls ion-buttons {
+  gap: 4px;
+}
+
+.additional-controls ion-buttons ion-button {
+  --padding-start: 8px;
+  --padding-end: 8px;
+  font-size: 12px;
+  height: 28px;
+}
+
+/* Action buttons */
+.action-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 0 16px;
+}
+
+.action-buttons ion-button {
+  margin: 0;
+}
+
+/* Bookmarks */
+.bookmarks-container {
+  padding: 16px;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--ion-color-medium);
+}
+
+.empty-state ion-icon {
+  font-size: 64px;
+  margin-bottom: 16px;
+}
+
+.empty-state p {
+  margin: 8px 0;
+  font-size: 16px;
+}
+
+.empty-state .subtitle {
+  font-size: 14px;
+  opacity: 0.7;
+}
+
+/* Responsive */
+@media (max-width: 576px) {
+  .artwork,
+  .artwork-placeholder {
+    width: 240px;
+    height: 240px;
+  }
+
+  .player-info h2 {
+    font-size: 20px;
+  }
+
+  .player-controls {
+    gap: 24px;
+  }
+
+  .play-button {
+    width: 70px;
+    height: 70px;
+    font-size: 28px;
+  }
+
+  .player-controls ion-button:not(.play-button) {
+    font-size: 24px;
+  }
+}
+
+/* Dark mode */
+@media (prefers-color-scheme: dark) {
+  .artwork,
+  .artwork-placeholder {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  }
+}

@@ -1,0 +1,89 @@
+.registration-content {
+  --background: var(--ion-color-light);
+}
+
+.registration-card {
+  margin: 20px 0;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.registration-card ion-card-title {
+  color: var(--ion-color-primary);
+  font-weight: 600;
+  font-size: 1.4rem;
+  margin-bottom: 8px;
+}
+
+.registration-card ion-item {
+  margin-bottom: 16px;
+  border-radius: 8px;
+  --border-style: solid;
+  --border-width: 1px;
+  --border-color: var(--ion-color-medium);
+}
+
+.registration-card ion-item.ion-invalid {
+  --border-color: var(--ion-color-danger);
+}
+
+.registration-card ion-label[position="stacked"] {
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.registration-card ion-input {
+  --padding-start: 12px;
+}
+
+.registration-card ion-select {
+  --padding-start: 12px;
+}
+
+.error-text {
+  display: block;
+  margin: 4px 12px 8px 12px;
+  font-size: 0.875rem;
+}
+
+.registration-card ion-button {
+  margin-top: 24px;
+  height: 48px;
+  font-weight: 600;
+  --border-radius: 8px;
+}
+
+.registration-card ion-checkbox {
+  margin-right: 8px;
+}
+
+@media (max-width: 768px) {
+  .registration-card {
+    margin: 10px;
+  }
+  
+  .registration-card ion-card-title {
+    font-size: 1.2rem;
+  }
+}
+
+/* Styles pour les états de chargement */
+.registration-card ion-spinner {
+  width: 20px;
+  height: 20px;
+}
+
+/* Amélioration de l'accessibilité */
+.registration-card ion-item:focus-within {
+  --border-color: var(--ion-color-primary);
+  box-shadow: 0 0 0 2px var(--ion-color-primary-tint);
+}
+
+/* Style pour les liens cliquables */
+.registration-card [style*="cursor: pointer"] {
+  transition: color 0.2s ease;
+}
+
+.registration-card [style*="cursor: pointer"]:hover {
+  color: var(--ion-color-primary-shade) !important;
+}

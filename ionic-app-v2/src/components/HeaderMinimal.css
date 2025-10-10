@@ -1,0 +1,101 @@
+/* Header Minimal - Design noir/blanc/violet */
+
+.header-minimal {
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-background);
+}
+
+.header-minimal ion-toolbar {
+  --background: var(--color-background);
+  --color: var(--color-text-primary);
+  --border-color: var(--color-border);
+  min-height: 60px;
+  padding: 0 var(--spacing-md);
+}
+
+.title-minimal {
+  font-size: 1.25rem;
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  margin-left: 0;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.btn-icon-minimal {
+  --color: var(--color-text-secondary);
+  --background: transparent;
+  --background-hover: var(--color-surface);
+  --background-activated: var(--color-surface);
+  --border-radius: var(--radius-md);
+  --padding-start: 12px;
+  --padding-end: 12px;
+  --padding-top: 12px;
+  --padding-bottom: 12px;
+  position: relative;
+  transition: var(--transition-fast);
+}
+
+.btn-icon-minimal:hover {
+  --background: var(--color-surface);
+}
+
+.btn-icon-minimal ion-icon {
+  font-size: 1.25rem;
+  color: var(--color-text-secondary);
+  transition: var(--transition-fast);
+}
+
+.btn-icon-minimal:hover ion-icon {
+  color: var(--color-accent);
+}
+
+.auth-button {
+  position: relative;
+}
+
+.auth-button ion-icon {
+  transition: all 0.2s ease;
+}
+
+.auth-button:hover ion-icon {
+  transform: scale(1.1);
+}
+
+.notification-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  font-size: 0.7rem;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--ion-color-danger);
+  color: white;
+  font-weight: var(--font-weight-semibold);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .title-minimal {
+    font-size: 1.1rem;
+  }
+  
+  .btn-icon-minimal {
+    --padding-start: 8px;
+    --padding-end: 8px;
+    --padding-top: 8px;
+    --padding-bottom: 8px;
+  }
+  
+  .btn-icon-minimal ion-icon {
+    font-size: 1.1rem;
+  }
+}

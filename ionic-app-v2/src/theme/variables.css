@@ -1,0 +1,231 @@
+/* Audio Guide Côte d'Ivoire - Design Moderne & Luxueux inspiré Rewind */
+
+/* === COULEURS PRINCIPALES (Côte d'Ivoire + Moderne) === */
+:root {
+  /* Couleurs Côte d'Ivoire modernisées */
+  --ion-color-primary: #FF6B35; /* Orange Côte d'Ivoire moderne */
+  --ion-color-primary-rgb: 255, 107, 53;
+  --ion-color-primary-contrast: #ffffff;
+  --ion-color-primary-contrast-rgb: 255, 255, 255;
+  --ion-color-primary-shade: #e05e2f;
+  --ion-color-primary-tint: #ff7649;
+
+  /* Secondary - Vert émeraude luxueux */
+  --ion-color-secondary: #00B894; /* Vert moderne de la nature ivoirienne */
+  --ion-color-secondary-rgb: 0, 184, 148;
+  --ion-color-secondary-contrast: #ffffff;
+  --ion-color-secondary-contrast-rgb: 255, 255, 255;
+  --ion-color-secondary-shade: #00a182;
+  --ion-color-secondary-tint: #1ac09f;
+
+  /* Couleurs système améliorées */
+  --ion-color-tertiary: #6C5CE7; /* Violet premium */
+  --ion-color-tertiary-rgb: 108, 92, 231;
+  --ion-color-tertiary-contrast: #ffffff;
+  --ion-color-tertiary-contrast-rgb: 255, 255, 255;
+  --ion-color-tertiary-shade: #5f51cb;
+  --ion-color-tertiary-tint: #7b6cea;
+
+  /* Success - Vert succès élégant */
+  --ion-color-success: #00D68F;
+  --ion-color-success-rgb: 0, 214, 143;
+  --ion-color-success-contrast: #ffffff;
+  --ion-color-success-contrast-rgb: 255, 255, 255;
+  --ion-color-success-shade: #00bd7e;
+  --ion-color-success-tint: #1ada9a;
+
+  /* Warning - Orange doré */
+  --ion-color-warning: #FFB900;
+  --ion-color-warning-rgb: 255, 185, 0;
+  --ion-color-warning-contrast: #000000;
+  --ion-color-warning-contrast-rgb: 0, 0, 0;
+  --ion-color-warning-shade: #e0a300;
+  --ion-color-warning-tint: #ffc01a;
+
+  /* Danger - Rouge élégant */
+  --ion-color-danger: #E74C3C;
+  --ion-color-danger-rgb: 231, 76, 60;
+  --ion-color-danger-contrast: #ffffff;
+  --ion-color-danger-contrast-rgb: 255, 255, 255;
+  --ion-color-danger-shade: #cb4335;
+  --ion-color-danger-tint: #ea6250;
+
+  /* === COULEURS PERSONNALISÉES LUXUEUSES === */
+  
+  /* Gradients premium */
+  --gradient-primary: linear-gradient(135deg, #FF6B35 0%, #FF8A5B 50%, #FFA07A 100%);
+  --gradient-secondary: linear-gradient(135deg, #00B894 0%, #00D68F 100%);
+  --gradient-premium: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --gradient-sunset: linear-gradient(135deg, #FF6B35 0%, #F093FB 50%, #F5576C 100%);
+  --gradient-dark: linear-gradient(135deg, #2C3E50 0%, #34495E 100%);
+
+  /* Couleurs de fond modernes */
+  --background-primary: #FFFFFF;
+  --background-secondary: #F8F9FA;
+  --background-card: #FFFFFF;
+  --background-overlay: rgba(255, 255, 255, 0.95);
+  --background-glassmorphism: rgba(255, 255, 255, 0.1);
+  
+  /* Texte moderne */
+  --text-primary: #2C3E50;
+  --text-secondary: #7F8C8D;
+  --text-light: #BDC3C7;
+  --text-premium: #1A1A1A;
+
+  /* Shadows modernes (style Rewind) */
+  --shadow-soft: 0 2px 20px rgba(0, 0, 0, 0.08);
+  --shadow-medium: 0 8px 32px rgba(0, 0, 0, 0.12);
+  --shadow-strong: 0 16px 64px rgba(0, 0, 0, 0.16);
+  --shadow-glow: 0 0 40px rgba(255, 107, 53, 0.3);
+
+  /* Borders modernes */
+  --border-radius-small: 8px;
+  --border-radius-medium: 16px;
+  --border-radius-large: 24px;
+  --border-radius-pill: 50px;
+
+  /* Spacing premium */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-xxl: 48px;
+}
+
+/* === DARK MODE LUXUEUX === */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background-primary: #1A1A1A;
+    --background-secondary: #2C2C2C;
+    --background-card: #2A2A2A;
+    --background-overlay: rgba(26, 26, 26, 0.95);
+    --background-glassmorphism: rgba(255, 255, 255, 0.05);
+    
+    --text-primary: #FFFFFF;
+    --text-secondary: #B0B0B0;
+    --text-light: #808080;
+    --text-premium: #F5F5F5;
+
+    --shadow-soft: 0 2px 20px rgba(0, 0, 0, 0.3);
+    --shadow-medium: 0 8px 32px rgba(0, 0, 0, 0.4);
+    --shadow-strong: 0 16px 64px rgba(0, 0, 0, 0.5);
+  }
+}
+
+/* === COMPOSANTS LUXUEUX === */
+
+/* Cards premium style Rewind */
+.premium-card {
+  background: var(--background-card);
+  border-radius: var(--border-radius-large);
+  box-shadow: var(--shadow-medium);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.premium-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-strong);
+}
+
+/* Boutons premium */
+.btn-premium {
+  background: var(--gradient-primary);
+  border-radius: var(--border-radius-pill);
+  padding: var(--spacing-md) var(--spacing-xl);
+  box-shadow: var(--shadow-medium);
+  border: none;
+  color: white;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.btn-premium:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-strong);
+}
+
+/* Audio player style luxueux */
+.audio-player-premium {
+  background: var(--background-glassmorphism);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  border-radius: var(--border-radius-large);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: var(--shadow-medium);
+}
+
+/* Navigation moderne */
+.nav-premium {
+  background: var(--background-overlay);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Typography luxueuse */
+.heading-premium {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-weight: 700;
+  color: var(--text-premium);
+  letter-spacing: -0.02em;
+}
+
+.text-gradient {
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Animations fluides style Rewind */
+.fade-in {
+  animation: fadeIn 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.slide-up {
+  animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+/* Glassmorphism effects */
+.glass-effect {
+  background: var(--background-glassmorphism);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Audio waveform style */
+.audio-waveform {
+  background: var(--gradient-primary);
+  border-radius: 2px;
+  animation: pulse 1.5s ease-in-out infinite alternate;
+}
+
+@keyframes pulse {
+  from { height: 4px; }
+  to { height: 24px; }
+}
