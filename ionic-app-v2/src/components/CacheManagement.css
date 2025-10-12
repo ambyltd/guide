@@ -1,0 +1,153 @@
+/**
+ * Styles pour CacheManagement
+ */
+
+.cache-management-card {
+  margin: 16px;
+}
+
+.cache-management-card .status-chip {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  font-size: 12px;
+}
+
+.cache-disabled-text {
+  text-align: center;
+  color: var(--ion-color-medium);
+  padding: 24px 0;
+}
+
+.sw-status {
+  margin-bottom: 16px;
+  padding: 12px;
+  background: var(--ion-color-light);
+  border-radius: 8px;
+}
+
+.sw-status h3 {
+  margin: 0 0 4px 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.sw-status p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--ion-color-medium);
+}
+
+.cache-stats-list {
+  margin: 16px 0;
+}
+
+.cache-stats-list ion-item {
+  --padding-start: 0;
+}
+
+.cache-stats-list h3 {
+  margin: 0 0 4px 0;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.cache-stats-list p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--ion-color-medium);
+  font-weight: 600;
+}
+
+.storage-quota {
+  margin: 24px 0;
+  padding: 16px;
+  background: var(--ion-color-light);
+  border-radius: 8px;
+}
+
+.storage-quota h3 {
+  margin: 0 0 4px 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.storage-quota p {
+  margin: 0 0 12px 0;
+  font-size: 13px;
+  color: var(--ion-color-medium);
+}
+
+.storage-progress {
+  height: 8px;
+  border-radius: 4px;
+}
+
+.storage-percentage {
+  text-align: center;
+  margin: 8px 0 0 0 !important;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ion-color-medium);
+}
+
+.cache-actions {
+  margin-top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cache-loading {
+  padding: 24px 0;
+}
+
+.offline-info {
+  margin-top: 16px;
+  padding: 12px;
+  background: var(--ion-color-warning-tint);
+  border-left: 4px solid var(--ion-color-warning);
+  border-radius: 4px;
+}
+
+.offline-info p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--ion-color-warning-contrast);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.cache-stats-list ion-item {
+  animation: fadeIn 0.3s ease;
+}
+
+.cache-stats-list ion-item:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.cache-stats-list ion-item:nth-child(2) {
+  animation-delay: 0.05s;
+}
+
+.cache-stats-list ion-item:nth-child(3) {
+  animation-delay: 0.1s;
+}
+
+.cache-stats-list ion-item:nth-child(4) {
+  animation-delay: 0.15s;
+}
+
+.cache-stats-list ion-item:nth-child(5) {
+  animation-delay: 0.2s;
+}

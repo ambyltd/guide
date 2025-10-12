@@ -436,7 +436,7 @@ const MapPage: React.FC = () => {
         </IonToolbar>
       </IonHeader>
 
-      <IonContent>
+      <IonContent fullscreen className="map-page-content">
         {/* Carte */}
         <div ref={mapContainer} className="map-container" />
 

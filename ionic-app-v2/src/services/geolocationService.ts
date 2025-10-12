@@ -420,13 +420,72 @@ class GeolocationService {
    */
   private async syncGeofenceRegions(): Promise<void> {
     try {
-      const response = await apiClient.get<GeofenceRegion[]>('/geofences');
-      this.geofenceRegions = response.data;
+      // Interface pour les attractions du backend
+      interface BackendAttractionData {
+        _id: string;
+        name: string;
+        category: string;
+        gpsLocation?: {
+          type: string;
+          coordinates: [number, number]; // [longitude, latitude]
+        };
+      }
+
+      // Récupérer les attractions depuis le backend (endpoint public)
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/attractions`);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data: unknown = await response.json();
+      
+      // La réponse peut être un objet avec une propriété 'data' ou directement un tableau
+      const attractions: BackendAttractionData[] = Array.isArray(data) 
+        ? data as BackendAttractionData[]
+        : ((data as { data?: unknown }).data || (data as { attractions?: unknown }).attractions || []) as BackendAttractionData[];
+      
+      if (!Array.isArray(attractions)) {
+        console.warn('⚠️ Response is not an array:', data);
+        throw new Error('Invalid response format: expected array of attractions');
+      }
+      
+      console.log(`📍 Loaded ${attractions.length} attractions for geofencing`);
+      
+      // Créer les geofence regions depuis les attractions
+      this.geofenceRegions = attractions
+        .filter((attr) => attr.gpsLocation?.coordinates && attr.gpsLocation.coordinates.length === 2)
+        .map((attr) => ({
+          id: attr._id,
+          latitude: attr.gpsLocation!.coordinates[1], // GeoJSON est [lng, lat]
+          longitude: attr.gpsLocation!.coordinates[0],
+          radius: 200, // 200 mètres par défaut
+          attractionId: attr._id,
+          audioGuideId: undefined,
+          triggers: [
+            {
+              event: 'enter' as const,
+              action: 'show_notification' as const,
+              payload: {
+                title: `🎯 Vous êtes arrivé !`,
+                body: `Bienvenue à ${attr.name}. Découvrez les guides audio disponibles.`,
+                attractionId: attr._id,
+                attractionName: attr.name,
+                category: attr.category
+              }
+            }
+          ],
+          active: true
+        } as GeofenceRegion));
       
       // Store locally
       localStorage.setItem('geofence_regions', JSON.stringify(this.geofenceRegions));
+      
+      console.log(`✅ ${this.geofenceRegions.length} zones de geofencing chargées depuis le backend`);
+      
     } catch (error) {
-      console.warn('Failed to sync geofence regions:', error);
+      console.warn('⚠️ Failed to sync geofence regions from backend:', error);
+      // Fallback: utiliser les données mockées si le backend n'est pas disponible
     }
   }
 

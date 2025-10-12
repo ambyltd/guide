@@ -1,3 +1,5 @@
+import { getApiBaseUrl, apiConfig, checkApiHealth } from '../config/apiConfig';
+
 export interface ApiResponse<T> {
   data: T;
   success: boolean;
@@ -9,8 +11,8 @@ export interface ApiError {
   status?: number;
 }
 
-// Configuration de l'API
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+// Configuration de l'API dynamique (dev/prod)
+const API_BASE_URL = getApiBaseUrl();
 
 class ApiClient {
   private baseURL: string;
@@ -114,6 +116,25 @@ class ApiClient {
       method: 'DELETE',
     });
   }
+
+  /**
+   * Vérifie si l'API est accessible (health check)
+   */
+  async checkHealth(): Promise<boolean> {
+    return checkApiHealth();
+  }
+
+  /**
+   * Retourne l'URL de base actuelle
+   */
+  getBaseUrl(): string {
+    return this.baseURL;
+  }
 }
 
 export const apiClient = new ApiClient(API_BASE_URL);
+
+// Log de la configuration au démarrage (dev uniquement)
+if (import.meta.env.DEV) {
+  console.log('📡 API Client initialized with baseURL:', API_BASE_URL);
+}

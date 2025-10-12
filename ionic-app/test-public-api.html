@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test API Publique - Mode Dégradé</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-result { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .success { background-color: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
+        .error { background-color: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
+        .info { background-color: #d1ecf1; border: 1px solid #bee5eb; color: #0c5460; }
+        button { background-color: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin: 5px; }
+        button:hover { background-color: #0056b3; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test API Publique - Mode Dégradé Firebase</h1>
+    <p>Ce test vérifie que l'application fonctionne correctement même sans Firestore/Storage.</p>
+    
+    <button onclick="testAttractions()">Tester Attractions</button>
+    <button onclick="testTours()">Tester Tours</button>
+    <button onclick="testAll()">Tester Tout</button>
+    <button onclick="clearResults()">Effacer</button>
+    
+    <div id="results"></div>
+
+    <script>
+        const resultsDiv = document.getElementById('results');
+        
+        function addResult(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `test-result ${type}`;
+            div.textContent = message;
+            resultsDiv.appendChild(div);
+        }
+        
+        async function testAttractions() {
+            addResult('🔄 Test des attractions en cours...', 'info');
+            try {
+                const response = await fetch('http://localhost:5000/api/attractions');
+                const data = await response.json();
+                
+                if (data.success) {
+                    addResult(`✅ Attractions: ${data.data.length} attractions chargées`, 'success');
+                } else {
+                    addResult(`❌ Attractions: ${data.error?.message || 'Erreur inconnue'}`, 'error');
+                }
+            } catch (error) {
+                addResult(`❌ Attractions: Erreur réseau - ${error.message}`, 'error');
+            }
+        }
+        
+        async function testTours() {
+            addResult('🔄 Test des tours en cours...', 'info');
+            try {
+                const response = await fetch('http://localhost:5000/api/tours');
+                const data = await response.json();
+                
+                if (data.success) {
+                    addResult(`✅ Tours: ${data.data.length} tours chargés`, 'success');
+                } else {
+                    addResult(`❌ Tours: ${data.error?.message || 'Erreur inconnue'}`, 'error');
+                }
+            } catch (error) {
+                addResult(`❌ Tours: Erreur réseau - ${error.message}`, 'error');
+            }
+        }
+        
+        async function testAll() {
+            clearResults();
+            addResult('🚀 Démarrage des tests complets...', 'info');
+            await testAttractions();
+            await testTours();
+            addResult('🏁 Tests terminés', 'info');
+        }
+        
+        function clearResults() {
+            resultsDiv.innerHTML = '';
+        }
+    </script>
+</body>
+</html>

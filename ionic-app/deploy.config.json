@@ -1,0 +1,32 @@
+{
+  "app": {
+    "name": "Audio Guide CI",
+    "id": "com.audioguide.cotedivoire",
+    "version": "1.0.0",
+    "author": "Audio Guide Team"
+  },
+  "build": {
+    "optimized": true,
+    "minify": true,
+    "sourcemap": false
+  },
+  "deployment": {
+    "android": {
+      "enabled": true,
+      "buildType": "debug",
+      "signApp": false,
+      "keystore": "./android.keystore"
+    },
+    "ios": {
+      "enabled": false,
+      "buildType": "debug",
+      "team": "YOUR_TEAM_ID",
+      "provision": "iOS Development"
+    },
+    "pwa": {
+      "enabled": true,
+      "host": "localhost",
+      "port": 4173
+    }
+  }
+}

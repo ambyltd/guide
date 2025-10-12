@@ -31,6 +31,12 @@ import {
 } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 import { authService } from '../services/authService';
+import { CacheManagement } from '../components/CacheManagement';
+import { useServiceWorker } from '../hooks/useServiceWorker';
+import { imageCacheService } from '../services/imageCacheService';
+import { audioCacheService } from '../services/audioCacheService';
+import { backgroundSyncService } from '../services/backgroundSyncService';
+import { userStatsService } from '../services/userStatsService';
 import './Profile.css';
 
 interface User {
@@ -49,11 +55,89 @@ const ProfilePage: React.FC = () => {
   const [showLogoutAlert, setShowLogoutAlert] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
   const [notifications, setNotifications] = useState(true);
+  const { swStatus, isOnline } = useServiceWorker();
+  
+  // 📊 États pour les statistiques de cache
+  const [cacheStats, setCacheStats] = useState({
+    images: { totalImages: 0, totalSize: 0, compressed: 0 },
+    audios: { totalAudios: 0, totalSize: 0 },
+    sync: { totalPending: 0, byType: {} as Record<string, number> },
+  });
+
+  // 📊 États pour les statistiques utilisateur
+  const [userStats, setUserStats] = useState<any>(null);
+  const [userBadges, setUserBadges] = useState<any[]>([]);
 
   useEffect(() => {
+    // TODO: Récupérer userId et userName depuis Firebase Auth
+    const userId = 'user-123';
+    const userName = 'Utilisateur Test';
+
+    // Initialiser userStatsService
+    userStatsService.initialize(userId, userName);
+    
+    console.log('✅ userStatsService initialisé (Profile):', { userId, userName });
+
     loadUserProfile();
     loadPreferences();
+    loadCacheStats();
+    loadUserStats();
   }, []);
+
+  // 📊 Charger les statistiques de cache
+  const loadCacheStats = async () => {
+    try {
+      const [imagesStats, audiosStats] = await Promise.all([
+        imageCacheService.getStats(),
+        audioCacheService.getStats(),
+      ]);
+
+      const syncStats = backgroundSyncService.getStats();
+
+      setCacheStats({
+        images: imagesStats,
+        audios: audiosStats,
+        sync: syncStats,
+      });
+
+      console.log('📊 Stats cache chargées:', {
+        images: `${imagesStats.totalImages} images (${imageCacheService.formatBytes(imagesStats.totalSize)})`,
+        audios: `${audiosStats.totalAudios} audios (${audioCacheService.formatBytes(audiosStats.totalSize)})`,
+        sync: `${syncStats.totalPending} en attente`,
+      });
+    } catch (error) {
+      console.error('❌ Erreur chargement stats cache:', error);
+    }
+  };
+
+  // 📊 Charger les statistiques utilisateur
+  const loadUserStats = async () => {
+    try {
+      const stats = await userStatsService.getUserStats();
+      setUserStats(stats);
+
+      // Vérifier et attribuer les badges automatiquement
+      const newBadges = await userStatsService.checkAndAwardBadges();
+      if (newBadges.length > 0) {
+        console.log('🏆 Nouveaux badges attribués:', newBadges);
+      }
+
+      // Récupérer tous les badges disponibles (convertir Record en Array)
+      const badgesObj = userStatsService.getAvailableBadges();
+      const allBadges = Object.values(badgesObj);
+      setUserBadges(allBadges);
+
+      console.log('📊 Stats utilisateur chargées:', {
+        attractionsVisited: stats.attractionsVisited,
+        audioGuidesListened: stats.audioGuidesListened,
+        favoriteCount: stats.favoriteCount,
+        reviewCount: stats.reviewCount,
+        badges: stats.badges.length,
+      });
+    } catch (error) {
+      console.error('❌ Erreur chargement stats utilisateur:', error);
+    }
+  };
 
   const loadUserProfile = () => {
     const currentUser = authService.getCurrentUser();
@@ -130,31 +214,179 @@ const ProfilePage: React.FC = () => {
           </IonAvatar>
           <h2>{user.displayName || 'Utilisateur'}</h2>
           <p>{user.email}</p>
+          
+          {/* Badge Offline Ready */}
+          {swStatus.active && (
+            <div className="profile-offline-badge">
+              <IonText color={isOnline ? 'success' : 'warning'}>
+                <p>
+                  {isOnline ? '✅ Mode offline activé' : '📡 Hors ligne'}
+                </p>
+              </IonText>
+            </div>
+          )}
         </div>
 
-        {/* Statistiques */}
+        {/* Statistiques Utilisateur */}
         <IonCard className="stats-card">
           <IonCardContent>
+            <h3>📊 Mes Statistiques</h3>
             <div className="stats-grid">
               <div className="stat-item">
                 <div className="stat-value">
-                  {JSON.parse(localStorage.getItem('favorites') || '[]').length}
+                  {userStats?.attractionsVisited || 0}
+                </div>
+                <div className="stat-label">Attractions visitées</div>
+              </div>
+              <div className="stat-item">
+                <div className="stat-value">
+                  {userStats?.favoriteCount || 0}
                 </div>
                 <div className="stat-label">Favoris</div>
               </div>
               <div className="stat-item">
                 <div className="stat-value">
-                  {JSON.parse(localStorage.getItem('downloadedGuides') || '[]').length}
+                  {userStats?.audioGuidesListened || 0}
                 </div>
-                <div className="stat-label">Téléchargés</div>
+                <div className="stat-label">Guides écoutés</div>
               </div>
               <div className="stat-item">
                 <div className="stat-value">
-                  {JSON.parse(localStorage.getItem('playbackHistory') || '[]').length}
+                  {userStats?.reviewCount || 0}
                 </div>
-                <div className="stat-label">Écoutés</div>
+                <div className="stat-label">Avis publiés</div>
+              </div>
+              <div className="stat-item">
+                <div className="stat-value">
+                  {userStats?.toursCompleted || 0}
+                </div>
+                <div className="stat-label">Circuits terminés</div>
+              </div>
+              <div className="stat-item">
+                <div className="stat-value">
+                  {userStatsService.formatListeningTime(userStats?.totalListeningTime || 0)}
+                </div>
+                <div className="stat-label">Temps d'écoute</div>
               </div>
             </div>
+          </IonCardContent>
+        </IonCard>
+
+        {/* Badges */}
+        {userStats?.badges && userStats.badges.length > 0 && (
+          <IonCard className="badges-card">
+            <IonCardContent>
+              <h3>🏆 Mes Badges ({userStats.badges.length})</h3>
+              <div className="badges-grid">
+                {userBadges.slice(0, 6).map((badge) => {
+                  const isUnlocked = userStats.badges.includes(badge.name);
+                  return (
+                    <div
+                      key={badge.name}
+                      className={`badge-item ${isUnlocked ? 'unlocked' : 'locked'}`}
+                    >
+                      <div className="badge-icon">{badge.icon}</div>
+                      <div className="badge-name">{badge.description}</div>
+                      {!isUnlocked && <div className="badge-lock">🔒</div>}
+                    </div>
+                  );
+                })}
+              </div>
+              {userBadges.length > 6 && (
+                <IonButton 
+                  expand="block" 
+                  fill="clear" 
+                  size="small"
+                  onClick={() => history.push('/stats')}
+                  style={{ marginTop: '12px' }}
+                >
+                  Voir tous les achievements
+                </IonButton>
+              )}
+            </IonCardContent>
+          </IonCard>
+        )}
+
+        {/* Statistiques Avancées */}
+        <IonCard className="advanced-stats-card">
+          <IonCardContent>
+            <h3>📊 Statistiques Avancées</h3>
+            <p className="card-description">
+              Découvrez vos tendances d'activité, achievements et classement parmi les autres utilisateurs.
+            </p>
+            <div className="stats-buttons">
+              <IonButton 
+                expand="block" 
+                color="primary"
+                onClick={() => history.push('/stats')}
+              >
+                📈 Voir mes statistiques
+              </IonButton>
+              <IonButton 
+                expand="block" 
+                fill="outline"
+                onClick={() => history.push('/leaderboard')}
+              >
+                🏆 Classement
+              </IonButton>
+            </div>
+          </IonCardContent>
+        </IonCard>
+
+        {/* 📊 Statistiques Cache & Stockage */}
+        <IonCard className="cache-stats-card">
+          <IonCardContent>
+            <h3>Cache & Stockage</h3>
+            <div className="cache-stats-grid">
+              <div className="cache-stat-item">
+                <div className="cache-stat-icon">🖼️</div>
+                <div className="cache-stat-info">
+                  <div className="cache-stat-value">
+                    {cacheStats.images.totalImages} images
+                  </div>
+                  <div className="cache-stat-label">
+                    {imageCacheService.formatBytes(cacheStats.images.totalSize)}
+                    {cacheStats.images.compressed > 0 && 
+                      ` • ${cacheStats.images.compressed} compressées`
+                    }
+                  </div>
+                </div>
+              </div>
+              
+              <div className="cache-stat-item">
+                <div className="cache-stat-icon">🎵</div>
+                <div className="cache-stat-info">
+                  <div className="cache-stat-value">
+                    {cacheStats.audios.totalAudios} audios
+                  </div>
+                  <div className="cache-stat-label">
+                    {audioCacheService.formatBytes(cacheStats.audios.totalSize)}
+                  </div>
+                </div>
+              </div>
+              
+              <div className="cache-stat-item">
+                <div className="cache-stat-icon">⚡</div>
+                <div className="cache-stat-info">
+                  <div className="cache-stat-value">
+                    {cacheStats.sync.totalPending} en attente
+                  </div>
+                  <div className="cache-stat-label">
+                    Synchronisation
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <IonButton 
+              expand="block" 
+              fill="outline" 
+              size="small"
+              onClick={loadCacheStats}
+              style={{ marginTop: '16px' }}
+            >
+              🔄 Actualiser les statistiques
+            </IonButton>
           </IonCardContent>
         </IonCard>
 
@@ -199,6 +431,9 @@ const ProfilePage: React.FC = () => {
             </IonLabel>
           </IonItem>
         </IonList>
+
+        {/* Gestion du cache offline (Sprint 3 Phase 2) */}
+        <CacheManagement />
 
         {/* Déconnexion */}
         <div className="logout-section">

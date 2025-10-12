@@ -45,6 +45,10 @@ import {
 import { useHistory } from 'react-router-dom';
 import axios from 'axios';
 import SearchFilters, { SearchFiltersState } from '../components/SearchFilters';
+import { imageCacheService } from '../services/imageCacheService';
+import { backgroundSyncService } from '../services/backgroundSyncService';
+import { favoritesService } from '../services/favoritesService';
+import { userStatsService } from '../services/userStatsService';
 import './Home.css';
 
 interface BackendAudioGuide {
@@ -141,10 +145,49 @@ const HomePage: React.FC = () => {
   ];
 
   useEffect(() => {
+    // 🔐 Initialiser les services avec l'utilisateur
+    // TODO: Récupérer userId et userName depuis Firebase Auth
+    const userId = 'user-123';
+    const userName = 'Utilisateur Test';
+    
+    favoritesService.initialize(userId, userName);
+    userStatsService.initialize(userId, userName);
+    
+    console.log('✅ Services initialisés:', { userId, userName });
+    
     loadAttractions();
     loadTours();
     loadFavorites();
   }, []);
+
+  // 🖼️ Précachage automatique des images d'attractions
+  useEffect(() => {
+    if (attractions.length === 0) return;
+
+    const imageUrls: string[] = [];
+    attractions.forEach((attraction) => {
+      if (attraction.images && attraction.images.length > 0) {
+        // Ajouter toutes les images de l'attraction
+        imageUrls.push(...attraction.images.filter(url => url && url.trim()));
+      }
+    });
+
+    if (imageUrls.length === 0) return;
+
+    console.log(`🖼️ Précachage de ${imageUrls.length} images d'attractions...`);
+    
+    imageCacheService.precacheImages(imageUrls, 'high', (current, total) => {
+      const percent = Math.round((current / total) * 100);
+      console.log(`📥 Précachage images: ${current}/${total} (${percent}%)`);
+    }).then(() => {
+      console.log('✅ Précachage images terminé');
+      imageCacheService.getStats().then(stats => {
+        console.log(`📊 Cache images: ${stats.totalImages} images, ${imageCacheService.formatBytes(stats.totalSize)}`);
+      });
+    }).catch(err => {
+      console.error('❌ Erreur précachage images:', err);
+    });
+  }, [attractions]);
 
   const loadAttractions = async () => {
     try {
@@ -152,9 +195,14 @@ const HomePage: React.FC = () => {
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
       const response = await axios.get(`${apiUrl}/attractions`);
       if (response.data.success && response.data.data.attractions && Array.isArray(response.data.data.attractions)) {
-        setAttractions(response.data.data.attractions);
-        setFilteredAttractions(response.data.data.attractions);
-        console.log('✅ Attractions chargées:', response.data.data.attractions.length);
+        const loadedAttractions = response.data.data.attractions;
+        setAttractions(loadedAttractions);
+        setFilteredAttractions(loadedAttractions);
+        
+        // ✅ Sauvegarder dans localStorage pour le précachage Service Worker
+        localStorage.setItem('attractionsList', JSON.stringify(loadedAttractions));
+        
+        console.log('✅ Attractions chargées:', loadedAttractions.length);
       }
     } catch (error) {
       console.error('❌ Erreur chargement attractions:', error);
@@ -177,14 +225,57 @@ const HomePage: React.FC = () => {
     }
   };
 
-  const loadFavorites = () => {
-    const saved = localStorage.getItem('favorites');
-    if (saved) {
-      setFavorites(new Set(JSON.parse(saved)));
+  const loadFavorites = async () => {
+    try {
+      // Essayer de charger depuis l'API
+      const favoriteIds = await favoritesService.getFavoriteIds();
+      setFavorites(new Set(favoriteIds));
+      console.log('✅ Favoris chargés depuis API:', favoriteIds.length);
+    } catch (error) {
+      console.error('❌ Erreur chargement favoris API, fallback localStorage:', error);
+      
+      // Fallback: Charger depuis localStorage
+      const saved = localStorage.getItem('favorites');
+      if (saved) {
+        setFavorites(new Set(JSON.parse(saved)));
+      }
     }
   };
 
-  const toggleFavorite = (id: string) => {
+  const toggleFavorite = async (id: string) => {
+    // ⚡ Utiliser favoritesService avec fallback sur backgroundSyncService pour offline
+    const isFavorite = favorites.has(id);
+
+    try {
+      // Essayer d'abord avec favoritesService (online)
+      const newIsFavorite = await favoritesService.toggleFavorite(id);
+      console.log(`✅ Favori ${newIsFavorite ? 'ajouté' : 'retiré'} avec succès`);
+      
+      // Incrémenter le compteur de favoris dans userStats
+      if (newIsFavorite) {
+        await userStatsService.incrementStat('favoriteCount', 1);
+      } else {
+        await userStatsService.incrementStat('favoriteCount', -1);
+      }
+    } catch (error) {
+      console.error('❌ Erreur favoritesService (online), fallback sur backgroundSync:', error);
+      
+      // Fallback: Utiliser backgroundSyncService pour sync automatique en mode offline
+      const userId = 'user-123'; // TODO: Récupérer depuis Firebase Auth
+      try {
+        if (isFavorite) {
+          await backgroundSyncService.removeFavorite(id, userId);
+          console.log('✅ Favori retiré (sync en arrière-plan)');
+        } else {
+          await backgroundSyncService.addFavorite(id, userId);
+          console.log('✅ Favori ajouté (sync en arrière-plan)');
+        }
+      } catch (bgError) {
+        console.error('❌ Erreur backgroundSync également:', bgError);
+      }
+    }
+
+    // Mettre à jour l'UI immédiatement
     setFavorites((prev) => {
       const next = new Set(prev);
       if (next.has(id)) {
@@ -366,34 +457,6 @@ const HomePage: React.FC = () => {
             ))}
           </IonSegment>
         </div>
-
-        <IonGrid className="stats-grid">
-          <IonRow>
-            <IonCol size="4">
-              <div className="stat-card">
-                <IonIcon icon={locationOutline} className="stat-icon" />
-                <div className="stat-value">{attractions.length}</div>
-                <div className="stat-label">Attractions</div>
-              </div>
-            </IonCol>
-            <IonCol size="4">
-              <div className="stat-card">
-                <IonIcon icon={playCircle} className="stat-icon" />
-                <div className="stat-value">
-                  {attractions.reduce((sum, a) => sum + (a.audioGuides?.length || 0), 0)}
-                </div>
-                <div className="stat-label">AudioGuides</div>
-              </div>
-            </IonCol>
-            <IonCol size="4">
-              <div className="stat-card">
-                <IonIcon icon={heartOutline} className="stat-icon" />
-                <div className="stat-value">{favorites.size}</div>
-                <div className="stat-label">Favoris</div>
-              </div>
-            </IonCol>
-          </IonRow>
-        </IonGrid>
 
         {loading && (
           <div className="loading-container">

@@ -34,6 +34,7 @@ import {
   IonGrid,
   IonRow,
   IonCol,
+  IonTextarea,
 } from '@ionic/react';
 import {
   heartOutline,
@@ -42,6 +43,7 @@ import {
   locationOutline,
   timeOutline,
   star,
+  starOutline,
   playCircle,
   mapOutline,
   callOutline,
@@ -49,12 +51,26 @@ import {
   navigateOutline,
   imageOutline,
   closeOutline,
+  downloadOutline,
+  checkmarkCircle,
+  chatbubbleOutline,
+  personCircleOutline,
+  thumbsUpOutline,
+  flagOutline,
 } from 'ionicons/icons';
 import { useParams, useHistory } from 'react-router-dom';
 import axios from 'axios';
 import mapboxgl from 'mapbox-gl';
 import type { BackendAttraction, BackendAudioGuide } from '../types/backend';
 import AudioPlayer from '../components/AudioPlayer';
+import ReportReviewModal from '../components/ReportReviewModal';
+import ShareSheet, { type SharePlatform } from '../components/ShareSheet';
+import { audioCacheService } from '../services/audioCacheService';
+import { reviewsService } from '../services/reviewsService';
+import { favoritesService } from '../services/favoritesService';
+import { userStatsService } from '../services/userStatsService';
+import { moderationService } from '../services/moderationService';
+import { socialShareService } from '../services/socialShareService';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import './AttractionDetail.css';
 
@@ -65,6 +81,9 @@ interface RouteParams {
   id: string;
 }
 
+// Import du type Review depuis le service
+import type { Review } from '../services/reviewsService';
+
 const AttractionDetailPage: React.FC = () => {
   const { id } = useParams<RouteParams>();
   const history = useHistory();
@@ -72,18 +91,52 @@ const AttractionDetailPage: React.FC = () => {
   const [audioGuides, setAudioGuides] = useState<BackendAudioGuide[]>([]);
   const [loading, setLoading] = useState(true);
   const [isFavorite, setIsFavorite] = useState(false);
-  const [selectedTab, setSelectedTab] = useState<'info' | 'audioguides' | 'photos'>('info');
+  const [selectedTab, setSelectedTab] = useState<'info' | 'audioguides' | 'photos' | 'reviews'>('info');
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [selectedAudioGuide, setSelectedAudioGuide] = useState<BackendAudioGuide | null>(null);
   const [isPlayerOpen, setIsPlayerOpen] = useState(false);
   const mapContainerRef = React.useRef<HTMLDivElement>(null);
   const mapRef = React.useRef<mapboxgl.Map | null>(null);
+  
+  // 🎵 États pour le cache audio
+  const [downloadProgress, setDownloadProgress] = useState<{ [key: string]: number }>({});
+  const [downloadedAudios, setDownloadedAudios] = useState<Set<string>>(new Set());
+  const [downloadingAudios, setDownloadingAudios] = useState<Set<string>>(new Set());
 
-  // Charger l'attraction
+  // 📝 États pour les reviews
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
+  const [newReviewRating, setNewReviewRating] = useState(5);
+  const [newReviewComment, setNewReviewComment] = useState('');
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+
+  // 🚩 États pour la modération
+  const [reportModalOpen, setReportModalOpen] = useState(false);
+  const [reviewToReport, setReviewToReport] = useState<string | null>(null);
+  const currentUserId = 'user-123'; // TODO: Récupérer depuis Firebase Auth
+
+  // 🔗 État pour le partage social
+  const [showShareSheet, setShowShareSheet] = useState<boolean>(false);
+
+  // Initialiser les services et charger les données
   useEffect(() => {
+    // TODO: Récupérer userId et userName depuis Firebase Auth
+    const userId = 'user-123';
+    const userName = 'Utilisateur Test';
+    const userAvatar = 'https://i.pravatar.cc/150?img=1';
+
+    // Initialiser les services
+    favoritesService.initialize(userId, userName);
+    userStatsService.initialize(userId, userName);
+    reviewsService.initialize(userId, userName, userAvatar);
+    
+    console.log('✅ Services initialisés (AttractionDetail):', { userId, userName });
+
+    // Charger les données
     loadAttraction();
     loadAudioGuides();
     checkFavorite();
+    loadReviews();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
@@ -125,11 +178,72 @@ const AttractionDetailPage: React.FC = () => {
     }
   };
 
-  const checkFavorite = () => {
-    const savedFavorites = localStorage.getItem('favorites');
-    if (savedFavorites) {
-      const favorites = new Set(JSON.parse(savedFavorites));
-      setIsFavorite(favorites.has(id));
+  const checkFavorite = async () => {
+    try {
+      const isFav = await favoritesService.isFavorite(id);
+      setIsFavorite(isFav);
+      console.log('✅ Statut favori chargé:', isFav);
+    } catch (error) {
+      console.error('❌ Erreur vérification favori, fallback localStorage:', error);
+      const savedFavorites = localStorage.getItem('favorites');
+      if (savedFavorites) {
+        const favorites = new Set(JSON.parse(savedFavorites));
+        setIsFavorite(favorites.has(id));
+      }
+    }
+  };
+
+  const loadReviews = async () => {
+    try {
+      setReviewsLoading(true);
+      const response = await reviewsService.getAttractionReviews(id, 1, 20);
+      setReviews(response.data || []);
+      console.log('✅ Reviews chargés:', response.data?.length || 0);
+    } catch (error) {
+      console.error('❌ Erreur chargement reviews:', error);
+      setReviews([]);
+    } finally {
+      setReviewsLoading(false);
+    }
+  };
+
+  const handleSubmitReview = async () => {
+    if (!newReviewComment.trim() || newReviewComment.length < 10) {
+      alert('Le commentaire doit contenir au moins 10 caractères');
+      return;
+    }
+
+    if (newReviewRating < 1 || newReviewRating > 5) {
+      alert('La note doit être entre 1 et 5');
+      return;
+    }
+
+    try {
+      setIsSubmittingReview(true);
+      await reviewsService.createReview({
+        attractionId: id,
+        rating: newReviewRating,
+        comment: newReviewComment,
+        language: 'fr',
+      });
+
+      // Incrémenter le compteur de reviews dans userStats
+      await userStatsService.incrementStat('reviewCount', 1);
+
+      // Recharger les reviews
+      await loadReviews();
+
+      // Réinitialiser le formulaire
+      setNewReviewComment('');
+      setNewReviewRating(5);
+
+      console.log('✅ Review créée avec succès');
+      alert('Votre avis a été publié avec succès !');
+    } catch (error) {
+      console.error('❌ Erreur création review:', error);
+      alert('Erreur lors de la publication de votre avis');
+    } finally {
+      setIsSubmittingReview(false);
     }
   };
 
@@ -168,32 +282,80 @@ const AttractionDetailPage: React.FC = () => {
   }, [attraction]);
 
   // Toggle favori
-  const toggleFavorite = () => {
-    const savedFavorites = localStorage.getItem('favorites');
-    const favorites = savedFavorites ? new Set(JSON.parse(savedFavorites)) : new Set();
+  const toggleFavorite = async () => {
+    const previousState = isFavorite;
+    try {
+      // Essayer favoritesService (online)
+      const newIsFavorite = await favoritesService.toggleFavorite(id);
+      setIsFavorite(newIsFavorite);
+      console.log(`✅ Favori ${newIsFavorite ? 'ajouté' : 'retiré'} avec succès`);
 
-    if (favorites.has(id)) {
-      favorites.delete(id);
-    } else {
-      favorites.add(id);
+      // Incrémenter/décrémenter userStats
+      if (newIsFavorite) {
+        await userStatsService.incrementStat('favoriteCount', 1);
+      } else {
+        await userStatsService.incrementStat('favoriteCount', -1);
+      }
+    } catch (error) {
+      console.error('❌ Erreur toggle favori, fallback localStorage:', error);
+      // Fallback localStorage pour offline
+      const savedFavorites = localStorage.getItem('favorites');
+      const favorites = savedFavorites ? new Set(JSON.parse(savedFavorites)) : new Set();
+
+      if (previousState) {
+        favorites.delete(id);
+      } else {
+        favorites.add(id);
+      }
+
+      localStorage.setItem('favorites', JSON.stringify(Array.from(favorites)));
+      setIsFavorite(!previousState);
     }
-
-    localStorage.setItem('favorites', JSON.stringify(Array.from(favorites)));
-    setIsFavorite(favorites.has(id));
   };
 
-  // Partager
-  const handleShare = async () => {
-    if (navigator.share && attraction) {
-      try {
-        await navigator.share({
-          title: attraction.name,
-          text: attraction.description,
-          url: window.location.href,
-        });
-      } catch {
-        console.log('Partage annulé');
+  // 🔗 Partager - Ouvrir le ShareSheet modal
+  const handleShare = () => {
+    setShowShareSheet(true);
+  };
+
+  // 🔗 Partager sur une plateforme spécifique
+  const handleSharePlatform = async (platform: SharePlatform) => {
+    if (!attraction) return;
+
+    try {
+      switch (platform) {
+        case 'whatsapp':
+          await socialShareService.shareToWhatsApp(
+            `${attraction.name} - ${attraction.description.slice(0, 100)}... Découvrez plus sur Ambyl! ${window.location.href}`,
+            window.location.href
+          );
+          break;
+        
+        case 'facebook':
+          await socialShareService.shareToFacebook(window.location.href);
+          break;
+        
+        case 'twitter':
+          await socialShareService.shareToTwitter(
+            `${attraction.name} - ${attraction.description.slice(0, 100)}...`,
+            window.location.href
+          );
+          break;
+        
+        case 'native':
+          await socialShareService.shareAttraction({
+            attractionId: attraction._id,
+            attractionName: attraction.name,
+            description: attraction.description,
+            imageUrl: attraction.images?.[0],
+            rating: attraction.rating,
+          });
+          break;
       }
+      
+      console.log('✅ Partagé avec succès sur', platform);
+    } catch (error) {
+      console.error('❌ Erreur partage:', error);
     }
   };
 
@@ -215,6 +377,85 @@ const AttractionDetailPage: React.FC = () => {
   const closePlayer = () => {
     setIsPlayerOpen(false);
     setSelectedAudioGuide(null);
+  };
+
+  // 🎵 Vérifier quels audios sont déjà téléchargés
+  useEffect(() => {
+    if (audioGuides.length === 0) return;
+
+    Promise.all(
+      audioGuides.map(async (guide) => {
+        const isDownloaded = await audioCacheService.isDownloaded(guide._id);
+        return { id: guide._id, isDownloaded };
+      })
+    ).then((results) => {
+      const downloaded = new Set(
+        results.filter(r => r.isDownloaded).map(r => r.id)
+      );
+      setDownloadedAudios(downloaded);
+      console.log(`✅ ${downloaded.size}/${audioGuides.length} audios déjà téléchargés`);
+    });
+  }, [audioGuides]);
+
+  // 🎵 Télécharger un audio guide
+  const handleDownloadAudio = async (audioGuide: BackendAudioGuide) => {
+    if (!attraction) return;
+
+    const audioId = audioGuide._id;
+    
+    // Déjà en cours de téléchargement
+    if (downloadingAudios.has(audioId)) {
+      console.log('⏳ Téléchargement déjà en cours:', audioGuide.title);
+      return;
+    }
+
+    // Déjà téléchargé
+    if (downloadedAudios.has(audioId)) {
+      console.log('✅ Audio déjà téléchargé:', audioGuide.title);
+      return;
+    }
+
+    setDownloadingAudios(prev => new Set(prev).add(audioId));
+    console.log(`📥 Téléchargement audio: ${audioGuide.title} (${audioGuide.language})`);
+
+    try {
+      const success = await audioCacheService.downloadAudio(
+        audioId,
+        audioGuide.audioUrl,
+        attraction._id,
+        audioGuide.language,
+        'high',
+        (progress) => {
+          setDownloadProgress(prev => ({ ...prev, [audioId]: progress.percentage }));
+          if (progress.percentage % 10 === 0) { // Log tous les 10%
+            console.log(
+              `📥 ${audioGuide.title}: ${progress.percentage}% ` +
+              `(${progress.speed} - ${progress.timeRemaining})`
+            );
+          }
+        }
+      );
+
+      if (success) {
+        setDownloadedAudios(prev => new Set(prev).add(audioId));
+        console.log('✅ Audio téléchargé avec succès:', audioGuide.title);
+      } else {
+        console.error('❌ Échec téléchargement audio:', audioGuide.title);
+      }
+    } catch (error) {
+      console.error('❌ Erreur téléchargement audio:', error);
+    } finally {
+      setDownloadingAudios(prev => {
+        const next = new Set(prev);
+        next.delete(audioId);
+        return next;
+      });
+      setDownloadProgress(prev => {
+        const next = { ...prev };
+        delete next[audioId];
+        return next;
+      });
+    }
   };
 
   // Formater la durée
@@ -350,7 +591,7 @@ const AttractionDetailPage: React.FC = () => {
         </div>
 
         {/* Onglets */}
-        <IonSegment value={selectedTab} onIonChange={(e) => setSelectedTab(e.detail.value as 'info' | 'audioguides' | 'photos')}>
+        <IonSegment value={selectedTab} onIonChange={(e) => setSelectedTab(e.detail.value as 'info' | 'audioguides' | 'photos' | 'reviews')}>
           <IonSegmentButton value="info">
             <IonLabel>Informations</IonLabel>
           </IonSegmentButton>
@@ -366,6 +607,16 @@ const AttractionDetailPage: React.FC = () => {
           </IonSegmentButton>
           <IonSegmentButton value="photos">
             <IonLabel>Photos</IonLabel>
+          </IonSegmentButton>
+          <IonSegmentButton value="reviews">
+            <IonLabel>
+              Avis
+              {reviews.length > 0 && (
+                <IonBadge color="primary" style={{ marginLeft: '5px' }}>
+                  {reviews.length}
+                </IonBadge>
+              )}
+            </IonLabel>
           </IonSegmentButton>
         </IonSegment>
 
@@ -512,32 +763,64 @@ const AttractionDetailPage: React.FC = () => {
               </IonCard>
             ) : (
               <IonList>
-                {audioGuides.map((guide) => (
-                  <IonCard key={guide._id} className="audioguide-card">
-                    <IonItem button onClick={() => playAudioGuide(guide._id)}>
-                      <IonThumbnail slot="start">
-                        <img
-                          src={guide.thumbnailUrl || '/assets/default-audio.jpg'}
-                          alt={guide.title}
-                        />
-                      </IonThumbnail>
-                      <IonLabel>
-                        <h2>{guide.title}</h2>
-                        <p>{guide.description}</p>
-                        <div className="audioguide-meta">
-                          <IonChip color="primary">
-                            <IonLabel>{guide.language.toUpperCase()}</IonLabel>
-                          </IonChip>
-                          <IonChip>
-                            <IonIcon icon={timeOutline} />
-                            <IonLabel>{formatDuration(guide.duration)}</IonLabel>
-                          </IonChip>
-                        </div>
-                      </IonLabel>
-                      <IonIcon icon={playCircle} slot="end" size="large" color="primary" />
-                    </IonItem>
-                  </IonCard>
-                ))}
+                {audioGuides.map((guide) => {
+                  const isDownloaded = downloadedAudios.has(guide._id);
+                  const isDownloading = downloadingAudios.has(guide._id);
+                  const progress = downloadProgress[guide._id] || 0;
+
+                  return (
+                    <IonCard key={guide._id} className="audioguide-card">
+                      <IonItem button onClick={() => playAudioGuide(guide._id)}>
+                        <IonThumbnail slot="start">
+                          <img
+                            src={guide.thumbnailUrl || '/assets/default-audio.jpg'}
+                            alt={guide.title}
+                          />
+                        </IonThumbnail>
+                        <IonLabel>
+                          <h2>{guide.title}</h2>
+                          <p>{guide.description}</p>
+                          <div className="audioguide-meta">
+                            <IonChip color="primary">
+                              <IonLabel>{guide.language.toUpperCase()}</IonLabel>
+                            </IonChip>
+                            <IonChip>
+                              <IonIcon icon={timeOutline} />
+                              <IonLabel>{formatDuration(guide.duration)}</IonLabel>
+                            </IonChip>
+                            {isDownloaded && (
+                              <IonChip color="success">
+                                <IonIcon icon={checkmarkCircle} />
+                                <IonLabel>Téléchargé</IonLabel>
+                              </IonChip>
+                            )}
+                          </div>
+                          {isDownloading && (
+                            <div className="download-progress">
+                              <div className="progress-bar" style={{ width: `${progress}%` }} />
+                              <span className="progress-text">{progress}%</span>
+                            </div>
+                          )}
+                        </IonLabel>
+                        {!isDownloaded && !isDownloading && (
+                          <IonButton
+                            fill="clear"
+                            slot="end"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDownloadAudio(guide);
+                            }}
+                          >
+                            <IonIcon icon={downloadOutline} />
+                          </IonButton>
+                        )}
+                        {!isDownloading && (
+                          <IonIcon icon={playCircle} slot="end" size="large" color="primary" />
+                        )}
+                      </IonItem>
+                    </IonCard>
+                  );
+                })}
               </IonList>
             )}
           </div>
@@ -576,6 +859,175 @@ const AttractionDetailPage: React.FC = () => {
           </div>
         )}
 
+        {/* Contenu - Avis */}
+        {selectedTab === 'reviews' && (
+          <div className="tab-content">
+            {/* Formulaire création avis */}
+            <IonCard>
+              <IonCardHeader>
+                <IonCardTitle>Donner votre avis</IonCardTitle>
+              </IonCardHeader>
+              <IonCardContent>
+                {/* Notation étoiles */}
+                <div style={{ marginBottom: '15px' }}>
+                  <IonText>
+                    <p style={{ marginBottom: '10px', fontWeight: 'bold' }}>Note : {newReviewRating}/5</p>
+                  </IonText>
+                  <div style={{ display: 'flex', gap: '5px' }}>
+                    {[1, 2, 3, 4, 5].map((starNum) => (
+                      <IonIcon
+                        key={starNum}
+                        icon={starNum <= newReviewRating ? star : starOutline}
+                        style={{ fontSize: '32px', color: '#ffc409', cursor: 'pointer' }}
+                        onClick={() => setNewReviewRating(starNum)}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Commentaire */}
+                <IonTextarea
+                  placeholder="Partagez votre expérience (minimum 10 caractères)..."
+                  value={newReviewComment}
+                  onIonInput={(e) => setNewReviewComment(e.detail.value || '')}
+                  rows={4}
+                  maxlength={1000}
+                  style={{ border: '1px solid #ddd', borderRadius: '8px', padding: '10px' }}
+                />
+                <IonText color="medium">
+                  <p style={{ fontSize: '12px', marginTop: '5px' }}>
+                    {newReviewComment.length}/1000 caractères
+                  </p>
+                </IonText>
+
+                {/* Bouton soumettre */}
+                <IonButton
+                  expand="block"
+                  onClick={handleSubmitReview}
+                  disabled={isSubmittingReview || newReviewComment.length < 10}
+                  style={{ marginTop: '15px' }}
+                >
+                  {isSubmittingReview ? 'Publication...' : 'Publier mon avis'}
+                </IonButton>
+              </IonCardContent>
+            </IonCard>
+
+            {/* Liste des avis */}
+            {reviewsLoading ? (
+              <IonCard>
+                <IonCardContent>
+                  <div style={{ textAlign: 'center', padding: '20px' }}>
+                    <IonSpinner name="crescent" />
+                    <IonText>
+                      <p>Chargement des avis...</p>
+                    </IonText>
+                  </div>
+                </IonCardContent>
+              </IonCard>
+            ) : reviews.length === 0 ? (
+              <IonCard>
+                <IonCardContent>
+                  <div className="empty-state">
+                    <IonIcon icon={chatbubbleOutline} className="empty-icon" />
+                    <IonText>
+                      <h3>Aucun avis pour le moment</h3>
+                      <p>Soyez le premier à partager votre expérience !</p>
+                    </IonText>
+                  </div>
+                </IonCardContent>
+              </IonCard>
+            ) : (
+              <>
+                <IonCard>
+                  <IonCardHeader>
+                    <IonCardTitle>Avis des visiteurs ({reviews.length})</IonCardTitle>
+                  </IonCardHeader>
+                </IonCard>
+                {reviews.map((review) => (
+                  <IonCard key={review._id}>
+                    <IonCardContent>
+                      {/* En-tête avis */}
+                      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
+                        <div style={{ marginRight: '10px' }}>
+                          {review.userAvatar ? (
+                            <img
+                              src={review.userAvatar}
+                              alt={review.userName}
+                              style={{ width: '40px', height: '40px', borderRadius: '50%' }}
+                            />
+                          ) : (
+                            <IonIcon icon={personCircleOutline} style={{ fontSize: '40px', color: '#999' }} />
+                          )}
+                        </div>
+                        <div style={{ flex: 1 }}>
+                          <IonText>
+                            <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 'bold' }}>
+                              {review.userName || 'Anonyme'}
+                            </h3>
+                          </IonText>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '3px', marginTop: '3px' }}>
+                            {[1, 2, 3, 4, 5].map((starNum) => (
+                              <IonIcon
+                                key={starNum}
+                                icon={starNum <= review.rating ? star : starOutline}
+                                style={{ fontSize: '16px', color: '#ffc409' }}
+                              />
+                            ))}
+                            <IonText color="medium">
+                              <span style={{ fontSize: '12px', marginLeft: '8px' }}>
+                                {new Date(review.createdAt).toLocaleDateString('fr-FR')}
+                              </span>
+                            </IonText>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Commentaire */}
+                      <IonText>
+                        <p style={{ margin: 0, lineHeight: '1.5' }}>{review.comment}</p>
+                      </IonText>
+
+                      {/* Badge modération */}
+                      {(() => {
+                        const badge = moderationService.getStatusBadge(review);
+                        return badge ? (
+                          <IonBadge color={badge.color} style={{ marginTop: '10px' }}>
+                            {badge.icon} {badge.text}
+                          </IonBadge>
+                        ) : null;
+                      })()}
+
+                      {/* Actions */}
+                      <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
+                        <IonChip color="light">
+                          <IonIcon icon={thumbsUpOutline} />
+                          <IonLabel>Utile</IonLabel>
+                        </IonChip>
+                        <IonChip
+                          color="light"
+                          onClick={() => {
+                            setReviewToReport(review._id);
+                            setReportModalOpen(true);
+                          }}
+                          style={{ cursor: 'pointer' }}
+                          disabled={moderationService.hasUserReported(review, currentUserId)}
+                        >
+                          <IonIcon icon={flagOutline} />
+                          <IonLabel>
+                            {moderationService.hasUserReported(review, currentUserId)
+                              ? 'Déjà signalé'
+                              : 'Signaler'}
+                          </IonLabel>
+                        </IonChip>
+                      </div>
+                    </IonCardContent>
+                  </IonCard>
+                ))}
+              </>
+            )}
+          </div>
+        )}
+
         {/* FAB - Directions */}
         <IonFab vertical="bottom" horizontal="end" slot="fixed">
           <IonFabButton onClick={goToMap}>
@@ -609,6 +1061,30 @@ const AttractionDetailPage: React.FC = () => {
           isOpen={isPlayerOpen}
           audioGuide={selectedAudioGuide}
           onClose={closePlayer}
+        />
+
+        {/* Modal de signalement de review */}
+        <ReportReviewModal
+          isOpen={reportModalOpen}
+          onClose={() => {
+            setReportModalOpen(false);
+            setReviewToReport(null);
+          }}
+          reviewId={reviewToReport || ''}
+          userId={currentUserId}
+          onReported={(reportCount, flagged) => {
+            // Rafraîchir les reviews après signalement
+            console.log(`Review signalée: ${reportCount} signalements, flagged: ${flagged}`);
+            loadReviews();
+          }}
+        />
+
+        {/* 🔗 ShareSheet Modal - Sprint 4 Phase 4 */}
+        <ShareSheet
+          isOpen={showShareSheet}
+          onClose={() => setShowShareSheet(false)}
+          onShare={handleSharePlatform}
+          title="Partager cette attraction"
         />
       </IonContent>
     </IonPage>

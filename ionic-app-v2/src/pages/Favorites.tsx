@@ -37,6 +37,9 @@ import {
 import { useHistory } from 'react-router-dom';
 import axios from 'axios';
 import type { BackendAttraction } from '../types/backend';
+import { backgroundSyncService } from '../services/backgroundSyncService';
+import { favoritesService } from '../services/favoritesService';
+import { userStatsService } from '../services/userStatsService';
 import './Favorites.css';
 
 const FavoritesPage: React.FC = () => {
@@ -46,6 +49,16 @@ const FavoritesPage: React.FC = () => {
   const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
+    // TODO: Récupérer userId et userName depuis Firebase Auth
+    const userId = 'user-123';
+    const userName = 'Utilisateur Test';
+
+    // Initialiser les services
+    favoritesService.initialize(userId, userName);
+    userStatsService.initialize(userId, userName);
+    
+    console.log('✅ Services initialisés (Favorites):', { userId, userName });
+
     loadFavorites();
   }, []);
 
@@ -53,7 +66,30 @@ const FavoritesPage: React.FC = () => {
     try {
       setLoading(true);
 
-      // Charger les IDs favoris depuis localStorage
+      // Charger les favoris depuis l'API (retourne les attractions complètes)
+      const userFavorites = await favoritesService.getUserFavorites();
+      const ids = userFavorites.map(fav => {
+        const attractionData = fav.attractionId;
+        if (typeof attractionData === 'string') {
+          return attractionData;
+        } else if (attractionData && typeof attractionData === 'object' && '_id' in attractionData) {
+          return (attractionData as any)._id;
+        }
+        return '';
+      }).filter(Boolean);
+      setFavoriteIds(new Set(ids));
+      
+      // Extraire les données d'attraction complètes (type assertion pour éviter conflit de types)
+      const attractions = userFavorites
+        .map(fav => fav.attractionId)
+        .filter((attr): attr is any => attr !== null && typeof attr === 'object' && '_id' in attr) as BackendAttraction[];
+
+      setFavorites(attractions);
+      console.log('✅ Favoris chargés depuis API:', attractions.length);
+    } catch (error) {
+      console.error('❌ Erreur chargement favoris API, fallback localStorage:', error);
+      
+      // Fallback: charger depuis localStorage
       const savedFavorites = localStorage.getItem('favorites');
       if (!savedFavorites) {
         setFavorites([]);
@@ -83,8 +119,6 @@ const FavoritesPage: React.FC = () => {
         .map((r) => r!.data.data);
 
       setFavorites(attractions);
-    } catch (error) {
-      console.error('Erreur chargement favoris:', error);
     } finally {
       setLoading(false);
     }
@@ -95,7 +129,21 @@ const FavoritesPage: React.FC = () => {
     event.detail.complete();
   };
 
-  const removeFavorite = (attractionId: string) => {
+  const removeFavorite = async (attractionId: string) => {
+    const userId = 'user-123'; // TODO: Récupérer depuis Firebase Auth
+    
+    try {
+      // Essayer favoritesService (online)
+      await favoritesService.removeFavorite(attractionId);
+      await userStatsService.incrementStat('favoriteCount', -1);
+      console.log('✅ Favori retiré avec succès');
+    } catch (error) {
+      console.error('❌ Erreur retrait favori, fallback backgroundSync:', error);
+      // Fallback: utiliser backgroundSyncService pour offline
+      await backgroundSyncService.removeFavorite(attractionId, userId);
+    }
+
+    // Mettre à jour l'UI immédiatement
     const newFavorites = new Set(favoriteIds);
     newFavorites.delete(attractionId);
     setFavoriteIds(newFavorites);
@@ -156,7 +204,7 @@ const FavoritesPage: React.FC = () => {
               <h2>Aucun favori</h2>
               <p>Ajoutez des attractions à vos favoris pour les retrouver facilement ici.</p>
             </IonText>
-            <IonButton routerLink="/home" expand="block">
+            <IonButton routerLink="/tabs/home" expand="block">
               Découvrir des attractions
             </IonButton>
           </div>

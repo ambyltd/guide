@@ -1,0 +1,107 @@
+/**
+ * ShareSheet Styles
+ * Sprint 4 - Phase 4
+ */
+
+.share-sheet-modal {
+  --height: auto;
+  --border-radius: 16px 16px 0 0;
+}
+
+.share-sheet-modal ion-content {
+  --background: #f4f5f8;
+}
+
+.share-option-item {
+  --padding-start: 16px;
+  --padding-end: 16px;
+  --inner-padding-end: 0;
+  --min-height: 60px;
+  margin: 8px 0;
+  border-radius: 12px;
+  background: white;
+}
+
+.share-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 16px;
+}
+
+.share-icon ion-icon {
+  font-size: 24px;
+  color: white;
+}
+
+.share-option-item h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #000;
+  margin: 0;
+}
+
+.share-info {
+  margin-top: 24px;
+  padding: 16px;
+  background: white;
+  border-radius: 12px;
+  text-align: center;
+}
+
+.share-info p {
+  font-size: 14px;
+  color: #666;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Couleurs spécifiques par plateforme (classes utilitaires) */
+.share-icon.whatsapp {
+  background-color: #25D366;
+}
+
+.share-icon.facebook {
+  background-color: #1877F2;
+}
+
+.share-icon.twitter {
+  background-color: #1DA1F2;
+}
+
+.share-icon.native {
+  background-color: #3880ff;
+}
+
+/* Animation d'entrée */
+.share-sheet-modal::part(content) {
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+/* Responsive */
+@media (max-width: 576px) {
+  .share-icon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .share-icon ion-icon {
+    font-size: 20px;
+  }
+
+  .share-option-item h3 {
+    font-size: 15px;
+  }
+}

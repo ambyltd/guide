@@ -1,0 +1,62 @@
+/**
+ * Styles pour OfflineIndicator
+ */
+
+.offline-indicator {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.05), transparent);
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.offline-indicator.online {
+  opacity: 0.7;
+}
+
+.offline-indicator.offline {
+  opacity: 1;
+  background: linear-gradient(to bottom, rgba(255, 193, 7, 0.1), transparent);
+}
+
+.offline-chip {
+  pointer-events: auto;
+  animation: slideDown 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.storage-warning-chip {
+  pointer-events: auto;
+  animation: slideDown 0.3s ease 0.1s both;
+  box-shadow: 0 2px 8px rgba(244, 67, 54, 0.3);
+}
+
+.offline-icon {
+  font-size: 20px;
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Hover effect */
+.offline-chip:hover,
+.storage-warning-chip:hover {
+  transform: scale(1.05);
+  transition: transform 0.2s ease;
+}

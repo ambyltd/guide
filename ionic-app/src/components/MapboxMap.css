@@ -1,0 +1,260 @@
+/* Mapbox Container */
+.mapbox-container {
+  position: relative;
+  width: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  background: #f8f9fa;
+}
+
+/* Carte Mapbox */
+.mapbox-map {
+  width: 100% !important;
+  height: 100% !important;
+  border-radius: 12px;
+}
+
+/* Contrôles personnalisés */
+.mapbox-controls {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mapbox-control-btn {
+  --border-radius: 8px;
+  --box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  min-height: 44px;
+  min-width: 44px;
+}
+
+.mapbox-control-btn:hover {
+  transform: translateY(-1px);
+  --box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+/* Informations sur la carte */
+.mapbox-info {
+  position: absolute;
+  bottom: 16px;
+  left: 16px;
+  z-index: 1000;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 8px 16px;
+  border-radius: 20px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+}
+
+.attraction-count {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ion-color-primary);
+}
+
+/* États de chargement */
+.mapbox-loading-card,
+.mapbox-error-card {
+  height: 100%;
+  margin: 0;
+  border-radius: 12px;
+}
+
+.mapbox-loading-content,
+.mapbox-error-content {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 16px;
+}
+
+.mapbox-loading-content h3,
+.mapbox-error-content h3 {
+  margin: 0;
+  color: var(--ion-color-primary);
+  font-size: 1.4rem;
+  font-weight: 600;
+}
+
+.mapbox-loading-content p,
+.mapbox-error-content p {
+  margin: 0;
+  color: var(--ion-color-medium);
+  font-size: 1rem;
+}
+
+.error-icon {
+  font-size: 3rem;
+  opacity: 0.7;
+}
+
+.retry-button {
+  margin-top: 8px;
+  --border-radius: 8px;
+}
+
+/* Popups Mapbox personnalisés */
+.mapbox-popup {
+  font-family: var(--ion-font-family);
+  max-width: 280px;
+  padding: 0;
+}
+
+.mapbox-popup h3 {
+  margin: 0 0 12px 0;
+  color: var(--ion-color-primary);
+  font-size: 1.2rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.mapbox-popup p {
+  margin: 8px 0;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  color: var(--ion-color-dark);
+}
+
+.mapbox-popup strong {
+  font-weight: 600;
+  color: var(--ion-color-primary);
+}
+
+.popup-description {
+  color: var(--ion-color-medium) !important;
+  font-style: italic;
+  border-top: 1px solid var(--ion-color-light);
+  padding-top: 8px;
+  margin-top: 12px;
+}
+
+.popup-button {
+  background: var(--ion-color-primary);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 12px;
+  width: 100%;
+  transition: all 0.2s ease;
+}
+
+.popup-button:hover {
+  background: var(--ion-color-primary-shade);
+  transform: translateY(-1px);
+}
+
+/* Contrôles Mapbox par défaut - Amélioration */
+.mapboxgl-ctrl-group {
+  background: rgba(255, 255, 255, 0.95) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15) !important;
+  backdrop-filter: blur(10px);
+}
+
+.mapboxgl-ctrl-group button {
+  border-radius: 8px !important;
+  transition: all 0.2s ease !important;
+}
+
+.mapboxgl-ctrl-group button:hover {
+  background: var(--ion-color-primary) !important;
+  color: white !important;
+}
+
+/* Popup Mapbox par défaut - Style amélioré */
+.mapboxgl-popup-content {
+  border-radius: 12px !important;
+  padding: 16px !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15) !important;
+  border: none !important;
+}
+
+.mapboxgl-popup-tip {
+  border-top-color: white !important;
+}
+
+.mapboxgl-popup-close-button {
+  font-size: 18px !important;
+  right: 8px !important;
+  top: 8px !important;
+  color: var(--ion-color-medium) !important;
+  font-weight: 700 !important;
+}
+
+.mapboxgl-popup-close-button:hover {
+  color: var(--ion-color-danger) !important;
+}
+
+/* Animation d'apparition */
+.mapbox-container {
+  animation: mapboxFadeIn 0.6s ease-out;
+}
+
+@keyframes mapboxFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .mapbox-controls {
+    top: 12px;
+    right: 12px;
+  }
+  
+  .mapbox-info {
+    bottom: 12px;
+    left: 12px;
+  }
+  
+  .mapbox-popup {
+    max-width: 240px;
+  }
+  
+  .mapbox-control-btn {
+    min-height: 40px;
+    min-width: 40px;
+  }
+}
+
+/* Mode sombre */
+@media (prefers-color-scheme: dark) {
+  .mapbox-container {
+    background: #1e1e1e;
+  }
+  
+  .mapbox-info {
+    background: rgba(30, 30, 30, 0.95);
+  }
+  
+  .attraction-count {
+    color: var(--ion-color-primary-tint);
+  }
+  
+  .mapboxgl-ctrl-group {
+    background: rgba(30, 30, 30, 0.95) !important;
+  }
+  
+  .mapboxgl-popup-content {
+    background: #2d2d2d !important;
+    color: #ffffff !important;
+  }
+}

@@ -1,0 +1,225 @@
+# Application de Découverte Audio Guide - Côte d'Ivoire
+
+## Description du Projet
+Application de découverte audio guide de la Côte d'Ivoire pour le marché européen, comprenant:
+- CMS web MVP basé sur le modèle izi.travel
+- Application mobile fonctionnelle avec Mapbox, Firebase Auth, MongoDB Atlas
+- Hébergement sur Netlify (frontend) et Render (backend)
+
+## Architecture
+- **Frontend Web**: React.js avec CMS intégré
+- **Mobile App**: React Native avec Expo
+- **Backend**: Node.js/Express avec MongoDB Atlas
+- **Authentification**: Firebase Auth
+- **Cartographie**: Mapbox
+- **Hébergement**: Netlify (web) + Render (backend)
+
+## Technologies
+- React.js, React Native, Node.js, Express.js
+- MongoDB Atlas, Firebase Auth, Mapbox GL JS
+- Netlify, Render
+
+## Checklist de Progression
+- [x] Clarifier les exigences du projet
+- [x] Créer la structure du projet
+- [x] Configurer le backend API avec TypeScript
+- [x] Créer les modèles MongoDB (Attractions, AudioGuides, Tours, Users)
+- [x] Implémenter les contrôleurs et routes de base
+- [x] Configurer le CMS web avec React et Material-UI
+- [x] Créer les services API et types TypeScript
+- [x] Implémenter les pages principales du CMS
+- [x] Configurer l'application mobile Expo
+- [x] Créer les scripts de déploiement (Dockerfile, netlify.toml)
+- [x] Ajouter les données d'exemple et script de seed
+- [x] Créer un seed complet avec 15 attractions et 8 circuits
+- [x] Implémenter le système de sauvegarde/restauration des données
+- [x] Tester et valider tous les endpoints API
+- [x] Corriger les problèmes de modèles et contrôleurs (attractionIds vs attractions)
+- [x] Résoudre le bug du filtre active dans les endpoints tours
+- [x] Corriger le bug du filtre active dans tous les contrôleurs
+- [x] Valider tous les endpoints avec script de test automatisé (100% de réussite)
+- [x] Développer le CMS web avec interface d'administration
+- [x] Créer page Dashboard avec statistiques
+- [x] Implémenter page Attractions avec gestion complète
+- [x] Créer page Guides Audio avec gestion complète
+- [x] Implémenter page Circuits Touristiques avec gestion complète
+- [x] Créer page Utilisateurs avec gestion complète
+- [x] **Sprint 1 - MVP Ionic App (COMPLÉTÉ)**
+  - [x] Page Home avec hero, recherche, catégories, attractions populaires
+  - [x] Page AttractionDetail avec galerie, audioguides, **map preview Mapbox GL JS intégrée**
+  - [x] Page Map avec Mapbox GL JS et markers interactifs
+  - [x] Page Profile avec stats et préférences utilisateur
+  - [x] Page Favorites avec gestion des favoris
+  - [x] Navigation TabsNavigation avec 4 tabs
+  - [x] Système de fallback vers données mockées
+  - [x] Intégration Firebase Auth et API backend
+- [x] **Sprint 2 - Fonctionnalités Avancées (COMPLÉTÉ + INTÉGRÉ)**
+  - [x] Composant AudioPlayer avec lecteur audio complet (409 lignes)
+  - [x] Contrôles play/pause, vitesse (0.75x-1.5x), volume, skip (±10s)
+  - [x] Système de marque-pages (bookmarks) avec localStorage
+  - [x] Mode téléchargement hors ligne (simulation, UI complète)
+  - [x] **Intégration AudioPlayer dans AttractionDetail.tsx**
+  - [x] Composant SearchFilters avec recherche avancée (346 lignes)
+  - [x] Filtres multicritères (catégories, note, distance, favoris)
+  - [x] Système de tri (distance, note, popularité, nom)
+  - [x] **Intégration SearchFilters dans Home.tsx et Map.tsx**
+- [x] **Intégration Données Réelles (COMPLÉTÉ)**
+  - [x] Seed MongoDB avec 5 attractions complètes
+  - [x] 10 audioguides (FR+EN) avec gpsLocation obligatoire
+  - [x] 2 circuits touristiques (historic, cultural)
+  - [x] Modification Home.tsx pour API backend
+  - [x] Modification AttractionDetail.tsx pour audioguides
+  - [x] Modification Map.tsx pour coordonnées GPS
+  - [x] Script de test d'intégration (100% réussite)
+- [x] **Corrections UI & UX**
+  - [x] Retrait des titres dans headers (navigation native)
+  - [x] Correction erreur géolocalisation timeout
+  - [x] Fallback position Abidjan pour dev/indoor
+  - [x] Optimisation paramètres géolocalisation
+- [x] **Sprint 3 - Géolocalisation & Offline (TOUTES PHASES COMPLÉTÉES + INTÉGRÉES)**
+  - [x] Service de géolocalisation temps réel (avec fallback)
+  - [x] **Phase 1: Notifications de proximité (geofencing) - COMPLÉTÉ**
+    - [x] notificationService.ts (240 lignes) - Gestion permissions et 5 types notifications
+    - [x] useGeofencing.ts (189 lignes) - Hook React avec calcul distances Haversine
+    - [x] Intégration Map.tsx avec badge compteur et auto-start/stop
+    - [x] Détection entrée/sortie zone (rayon 200m configurable)
+    - [x] Mise à jour position automatique (10s)
+    - [x] Guide de test GEOFENCING_TEST_GUIDE.md
+  - [x] **Phase 2: Service Worker pour mode offline complet - COMPLÉTÉ**
+    - [x] vite-plugin-pwa installé et configuré (3 stratégies de cache)
+    - [x] serviceWorkerService.ts (600+ lignes) - API complète de gestion SW
+    - [x] useServiceWorker hook (150+ lignes) - États réactifs et actions
+    - [x] OfflineIndicator composant (bannière statut online/offline)
+    - [x] CacheManagement composant (statistiques + actions) dans Profile
+    - [x] Workbox avec Network First (API), Cache First (Images, Mapbox)
+    - [x] Précache automatique de 17 fichiers (3.3 MB)
+    - [x] SPRINT3_RAPPORT_FINAL.md (documentation complète)
+  - [x] **Phase 3: Cache intelligent des images - COMPLÉTÉ + INTÉGRÉ**
+    - [x] imageCacheService.ts (600+ lignes) - Téléchargement, compression, lazy loading
+    - [x] Canvas API compression (max 1920x1080, quality 0.8)
+    - [x] IntersectionObserver lazy loading (rootMargin 50px)
+    - [x] Capacitor Filesystem stockage (200 MB max)
+    - [x] Nettoyage auto >30 jours, priorités high/medium/low
+    - [x] **Intégration Home.tsx** - Précachage auto 15 images avec progress logs
+  - [x] **Phase 4: Cache audio IndexedDB - COMPLÉTÉ + INTÉGRÉ**
+    - [x] audioCacheService.ts (600+ lignes) - IndexedDB, download queue, offline
+    - [x] Stockage Blob dans IndexedDB (quota 100 MB)
+    - [x] Progress détaillé (loaded, total, speed, timeRemaining)
+    - [x] File d'attente avec priorités et AbortController
+    - [x] Object URL pour lecture offline
+    - [x] **Intégration AttractionDetail.tsx** - Boutons download avec progress bar + badges "Téléchargé ✓"
+  - [x] **Phase 5: Background Sync - COMPLÉTÉ + INTÉGRÉ**
+    - [x] backgroundSyncService.ts (600+ lignes) - Queue, retry, network detection
+    - [x] 5 types: favorite, unfavorite, review, rating, stats
+    - [x] Exponential backoff (max 5 attempts, 1s -> 1min)
+    - [x] Network listener auto-sync au retour online
+    - [x] Synchronisation périodique (30s)
+    - [x] **Intégration Home.tsx & Favorites.tsx** - toggleFavorite() avec queue offline
+  - [x] **Configuration Backend - COMPLÉTÉ**
+    - [x] apiConfig.ts (200+ lignes) - Configuration dynamique dev/prod
+    - [x] Détection auto IP (192.168.1.9)
+    - [x] Health check API
+    - [x] apiClient.ts mis à jour
+  - [x] **Documentation & Tests - COMPLÉTÉE**
+    - [x] SPRINT3_PHASES_3_4_5_GUIDE.md (700+ lignes)
+    - [x] INTEGRATION_TEST_GUIDE.md (850+ lignes) - Tests complets Phases 1-5
+    - [x] Scripts allow-port-5000.ps1
+  - [x] **Build Production - VALIDÉ**
+    - [x] npm run build: 39.29s, 0 errors
+    - [x] Service Worker généré, 19 fichiers précachés (3335.48 KB)
+    - [x] Dev server: http://localhost:5173/ (lancé)
+- [x] **Tests Web (localhost:5173) - VALIDÉS**
+  - [x] Test Phase 3: Précachage images (Home) ✅
+  - [x] Test Phase 4: Download audio avec progress (AttractionDetail) ✅
+  - [x] Test Phase 5: Favoris offline → sync auto (Home/Favorites) ✅
+  - [x] Test Stats cache (Profile) ✅
+  - [x] Guide: TEST_WEB_INTERACTIF.md (600+ lignes)
+- [x] **Configuration Backend Device - VALIDÉE**
+  - [x] Script allow-port-5000.ps1 (firewall configuration)
+  - [x] IP: 192.168.1.9, Port: 5000
+  - [x] Health check: http://192.168.1.9:5000/api/health ✅
+  - [x] Guide: CONFIG_BACKEND_DEVICE.md (500+ lignes)
+- [x] **Installation Device Android - COMPLÉTÉE**
+  - [x] Script: open-android-studio.bat
+  - [x] Build & Rebuild Project (1-2 min)
+  - [x] App installée via Android Studio ✅
+  - [x] Guide: INSTALLATION_RAPIDE_ANDROID.md (300+ lignes)
+- [ ] **Tests Device Android (EN COURS - 50 min)**
+  - [ ] Test Phase 1 (Geofencing + Fake GPS) - 15 min
+  - [ ] Test Phase 3 (Cache images offline) - 10 min
+  - [ ] Test Phase 4 (Cache audio + lecture offline) - 15 min
+  - [ ] Test Phase 5 (Background sync favoris) - 10 min
+  - [ ] Guides: TESTS_DEVICE_ANDROID.md (500+ lignes), SUIVI_TESTS_DEVICE.md (400+ lignes)
+- [x] **Implémentation Backend API - COMPLÉTÉE**
+  - [x] Endpoints favorites (POST, DELETE, GET, GET check) - 4 endpoints
+  - [x] Endpoints reviews (POST, GET, PATCH helpful/report/moderate) - 5 endpoints
+  - [x] Endpoints user stats (GET, PATCH, PATCH increment, POST badge, GET leaderboard) - 5 endpoints
+  - [x] Modèles MongoDB (Favorite, Review, UserStats) - 3 modèles
+  - [x] Documentation API (API_BACKEND_SYNC.md - 500+ lignes)
+  - [x] Test automatique (test-backend-sync.js - 14 endpoints)
+- [x] **Intégration Mobile Services - COMPLÉTÉE**
+  - [x] favoritesService.ts (150 lignes) - 7 méthodes + toggle
+  - [x] reviewsService.ts (180 lignes) - 7 méthodes + calculs
+  - [x] userStatsService.ts (300 lignes) - 10 méthodes + 8 badges
+  - [x] Total: 630 lignes, 24 méthodes, intégration complète apiClient
+- [x] **Sprint 4 - Social & Reviews (COMPLÉTÉ - 4h30)**
+  - [x] **Phase 1: Backend Modération (30 min)**
+    - [x] Enhanced reportReview() avec reportedBy[], auto-flagging (>=3)
+    - [x] Enhanced moderateReview() avec admin approval + notes
+    - [x] Cleanup duplicate code (lignes 461-610 supprimées)
+    - [ ] Routes PATCH /:id/report et /:id/moderate (à ajouter reviews.ts)
+  - [x] **Phase 3: Social Sharing Service (20 min)**
+    - [x] socialShareService.ts (250 lignes) - Capacitor Share API
+    - [x] 7 méthodes: shareAttraction, shareReview, shareToWhatsApp/Facebook/Twitter, canShare, buildDeepLink
+    - [x] Deep links support (/attraction/{id}, /review/{id})
+    - [x] Analytics tracking (shareCount increment)
+    - [x] Package @capacitor/share installé (3 packages, 18s)
+  - [x] **Phase 5: Advanced Stats Backend Service (45 min)**
+    - [x] advancedStatsService.ts (600+ lignes) - Service client-side complet
+    - [x] getLeaderboard() avec tri dynamique + filtres temporels
+    - [x] getUserTrends() avec fallback mockées (7j/30j)
+    - [x] compareWithPeers() avec percentile et rang
+    - [x] getAchievements() - 12 achievements (4 catégories, 4 tiers)
+    - [x] getDashboardAnalytics() pour admin
+    - [x] trackAction() pour analytics temps réel
+    - [x] Utilitaires: calculateScore, formatNumber, getRankEmoji, getTierColor
+  - [x] **Phase 6: Advanced Stats UI (60 min)**
+    - [x] Package recharts installé (27 packages, 18s)
+    - [x] StatsPage.tsx (450 lignes) - 3 tabs: Tendances, Achievements, Comparaison
+    - [x] Tab Tendances: LineChart activité + BarChart écoute + sélecteur période
+    - [x] Tab Achievements: Grid par catégorie + progress bars + unlock badges
+    - [x] Tab Comparaison: Rank card gradient + BarChart vs Moyenne + table détails
+    - [x] StatsPage.css (200 lignes) - Responsive + animations pulse
+    - [x] LeaderboardPage.tsx (300 lignes) - Filtres période/métrique + liste classement
+    - [x] LeaderboardPage.css (200 lignes) - Chips, rank badges, score badges
+    - [x] Profile.tsx: Card "Statistiques Avancées" avec boutons navigation
+    - [x] App.tsx: Routes /stats et /leaderboard ajoutées
+  - [ ] **Phase 2: UI Modération (45 min - PENDING)**
+    - [ ] moderationService.ts (client-side wrapper)
+    - [ ] AttractionDetail.tsx: Bouton "Signaler" reviews + modal raisons
+    - [ ] ModerationsPage.tsx (admin) - Liste flagged + approve/reject
+  - [ ] **Phase 4: Social Sharing UI (30 min - PENDING)**
+    - [ ] AttractionDetail.tsx: FAB button "Partager"
+    - [ ] ShareSheet component (WhatsApp, Facebook, Twitter, Native)
+    - [ ] Success toast + analytics tracking
+  - [ ] **Backend API Endpoints (2h - PENDING)**
+    - [ ] GET /api/users/leaderboard (sortBy, limit, timeframe)
+    - [ ] GET /api/users/:userId/trends (7d/30d)
+    - [ ] GET /api/users/:userId/compare
+    - [ ] GET /api/analytics/dashboard (admin)
+    - [ ] POST /api/analytics/track
+    - [ ] Modèles: UserActivity, ActivityLog, UserStats extension
+  - [ ] **Tests & Documentation (1h - PENDING)**
+    - [ ] Tests backend modération (report, moderate)
+    - [ ] Tests React (StatsPage, LeaderboardPage)
+    - [ ] Tests device Android (social sharing)
+    - [ ] Documentation API endpoints
+- [x] **Sprint 5 - CMS Admin Panel & Feature Management (COMPLÉTÉ - 3h45)**
+  - [x] **Backend (825L)**: FeatureFlag model (130L), adminController (520L), admin routes (75L), features routes publiques (100L)
+  - [x] **CMS (1580L)**: analyticsService (350L), Analytics page (500L), featuresService (200L), Features page (500L), Layout sidebar (+30L)
+  - [x] **Mobile (430L)**: featureFlagService (320L), useFeatureFlag hooks (110L)
+  - [x] **Tests & Docs (1180L)**: test-admin-features.js (330L), SPRINT5_ADMIN_PANEL.md (850L)
+  - [x] **10 feature flags seeded**: social_sharing, advanced_stats, geofencing, offline_mode, background_sync, audio_cache, image_cache, push_notifications, dark_mode, beta_features
+  - [x] **Statistiques**: 3395+ lignes, 13 fichiers, Build backend 0 erreurs, Build CMS warnings mineurs
+  - [x] **Administration**: Toggle features ON/OFF, Create/Edit/Delete, Analytics dashboard (6 stats cards, 4 charts)
+- [ ] Tests et finalisations

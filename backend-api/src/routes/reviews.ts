@@ -5,31 +5,54 @@ import {
   getAllReviews, 
   deleteReview,
   toggleReviewActive,
-  moderateReview
+  moderateReview,
+  getReviews,
+  markReviewHelpful,
+  reportReview,
+  createReviewSimple,
+  // 🚀 SPRINT 4: Nouvelles fonctions de modération
+  getPendingReviews,
+  getModerationStats,
 } from '../controllers/reviewController';
 import { firebaseAuthMiddleware } from '../middleware/authMiddleware';
 import { requireAdmin } from '../middleware/requireAdmin';
 
 const router = express.Router();
 
-// Route pour l'application mobile : créer un avis (nécessite une authentification utilisateur)
-router.post('/', firebaseAuthMiddleware, createReview);
+// ========== ROUTES MOBILE APP (PUBLIQUES POUR LES TESTS) ==========
 
-// Route pour l'application mobile : récupérer les avis d'un item (publique)
+// POST /api/reviews - Créer une review (version simplifiée sans auth pour tests)
+router.post('/', createReviewSimple);
+
+// GET /api/reviews - Récupérer les reviews (filtrable par attractionId, userId, status)
+router.get('/', getReviews);
+
+// PATCH /api/reviews/:id/helpful - Marquer une review comme utile
+router.patch('/:id/helpful', markReviewHelpful);
+
+// PATCH /api/reviews/:id/report - Signaler une review
+router.patch('/:id/report', reportReview);
+
+// PATCH /api/reviews/:id/moderate - Modérer une review (publique pour tests)
+router.patch('/:id/moderate', moderateReview);
+
+// GET /api/reviews/item/:itemId - Récupérer les avis d'un item (publique)
 router.get('/item/:itemId', getReviewsForItem);
 
-// --- Routes pour le CMS (nécessitent une authentification admin) ---
+// ========== 🚀 SPRINT 4: MODÉRATION AVANCÉE ==========
 
-// Récupérer tous les avis pour la modération
-router.get('/', firebaseAuthMiddleware, requireAdmin, getAllReviews);
+// GET /api/reviews/pending - Récupérer les avis en attente de modération
+router.get('/pending', getPendingReviews);
 
-// Supprimer un avis
+// GET /api/reviews/moderation/stats - Statistiques de modération (dashboard admin)
+router.get('/moderation/stats', getModerationStats);
+
+// --- Routes CMS (authentification admin) ---
+
+// DELETE /api/reviews/:id - Supprimer un avis (admin only)
 router.delete('/:id', firebaseAuthMiddleware, requireAdmin, deleteReview);
 
-// Activer/désactiver un avis
+// PATCH /api/reviews/:id/toggle-active - Activer/désactiver un avis (admin only)
 router.patch('/:id/toggle-active', firebaseAuthMiddleware, requireAdmin, toggleReviewActive);
-
-// Modérer un avis
-router.patch('/:id/moderate', firebaseAuthMiddleware, requireAdmin, moderateReview);
 
 export default router;

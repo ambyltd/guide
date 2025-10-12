@@ -15,6 +15,9 @@ import './models/Review';
 import './models/UserSession';
 import './models/ListeningBehavior';
 import './models/PersonalizationProfile';
+import './models/Favorite';
+import './models/UserStats';
+import './models/FeatureFlag'; // Sprint 5 - Feature Flags
 
 // Routes
 import attractionRoutes from './routes/attractions';
@@ -26,6 +29,10 @@ import generalRoutes from './routes/general';
 import reviewRoutes from './routes/reviews';
 import gpsRoutes from './routes/gps';
 import analyticsRoutes from './routes/analytics';
+import favoriteRoutes from './routes/favorites';
+import userStatsRoutes from './routes/userStats';
+import adminRoutes from './routes/admin'; // Sprint 5 - Admin Routes
+import featuresRoutes from './routes/features'; // Sprint 5 - Public Features Routes
 
 // Middleware
 import { firebaseAuthMiddleware } from './middleware/authMiddleware';
@@ -57,9 +64,15 @@ app.use(cors({
     'http://localhost:5173', // Vite dev server
     'http://localhost:8100', // Ionic dev server
     'https://cotedivoire-audioguide.netlify.app',
-    'exp://localhost:19000' // Expo development
+    'exp://localhost:19000', // Expo development
+    'capacitor://localhost', // Capacitor iOS
+    'ionic://localhost', // Capacitor iOS alternative
+    'https://localhost', // Capacitor Android
+    'http://localhost' // Capacitor Android alternative
   ],
-  credentials: true
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 }));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
@@ -96,15 +109,24 @@ app.use('/api', (req, res, next) => {
     '/audio-guides',
     '/gps/nearby-attractions',
     '/gps/insights',
-    '/analytics/dashboard'
+    '/analytics/dashboard',
+    '/features',       // Sprint 5 - Public feature flags (mobile app)
+    '/favorites',      // Pour les tests (à sécuriser en production)
+    '/reviews',        // Pour les tests (à sécuriser en production)
+    '/users'           // Pour les tests (à sécuriser en production)
   ];
   
-  // Routes publiques : GET seulement
+  // Routes publiques : GET seulement pour attractions/tours/audio-guides
+  // Routes favorites/reviews/users : accès complet pour les tests
   const isPublicRoute = publicRoutes.some(route => req.path.startsWith(route));
   const isGetRequest = req.method === 'GET';
+  const isTestRoute = ['/favorites', '/reviews', '/users'].some(route => req.path.startsWith(route));
   
-  // Skip auth pour /health et les requêtes GET sur les routes publiques
-  if (req.path === '/health' || (isPublicRoute && isGetRequest)) {
+  // Skip auth pour :
+  // - /health
+  // - GET sur les routes publiques (attractions, tours, etc.)
+  // - Toutes les méthodes sur les routes de test (favorites, reviews, users)
+  if (req.path === '/health' || (isPublicRoute && isGetRequest) || isTestRoute) {
     return next();
   }
   
@@ -132,7 +154,9 @@ app.get('/', (req, res) => {
       auth: '/api/auth',
       reviews: '/api/reviews',
       gps: '/api/gps',
-      analytics: '/api/analytics'
+      analytics: '/api/analytics',
+      admin: '/api/admin', // Sprint 5
+      features: '/api/features' // Sprint 5 - Public
     }
   });
 });
@@ -140,11 +164,14 @@ app.get('/', (req, res) => {
 app.use('/api/attractions', attractionRoutes);
 app.use('/api/audio-guides', audioGuideRoutes);
 app.use('/api/tours', tourRoutes);
-app.use('/api/users', userRoutes);
+app.use('/api/users', userStatsRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/reviews', reviewRoutes);
+app.use('/api/favorites', favoriteRoutes);
 app.use('/api/gps', gpsRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/admin', adminRoutes); // Sprint 5 - Admin routes (auth required)
+app.use('/api/features', featuresRoutes); // Sprint 5 - Public features routes
 app.use('/api', generalRoutes);
 
 // Error handling middleware

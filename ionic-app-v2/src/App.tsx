@@ -29,8 +29,14 @@ import ForgotPasswordPage from './pages/ForgotPasswordPage';
 /* Pages de réservation */
 import PaidReservationsPage from './pages/PaidReservationsPage';
 
+/* Pages Sprint 4 - Statistiques Avancées */
+import StatsPage from './pages/StatsPage';
+import LeaderboardPage from './pages/LeaderboardPage';
+
 /* Components */
 import { GuestOnly } from './components/ProtectedRoute';
+import { OfflineIndicator } from './components/OfflineIndicator';
+import { ServiceWorkerProvider } from './components/ServiceWorkerProvider';
 
 /* Core CSS required for Ionic components to work properly */
 import '@ionic/react/css/core.css';
@@ -67,8 +73,12 @@ setupIonicReact();
 
 const AppMinimal: React.FC = () => (
   <Provider store={store}>
-    <IonApp>
-      <IonReactRouter>
+    <ServiceWorkerProvider>
+      <IonApp>
+        {/* Indicateur de statut offline */}
+        <OfflineIndicator />
+        
+        <IonReactRouter>
         <IonRouterOutlet>
           {/* Routes d'authentification */}
           <Route exact path="/login">
@@ -128,6 +138,19 @@ const AppMinimal: React.FC = () => (
                   <Redirect to="/tabs/home" />
                 </Route>
               </IonRouterOutlet>
+
+              {/* Routes hors tabs (pages accessibles depuis Profile) */}
+              <IonRouterOutlet>
+                {/* Page Statistiques Avancées - Sprint 4 Phase 6 */}
+                <Route exact path="/stats">
+                  <StatsPage />
+                </Route>
+
+                {/* Page Leaderboard - Sprint 4 Phase 6 */}
+                <Route exact path="/leaderboard">
+                  <LeaderboardPage />
+                </Route>
+              </IonRouterOutlet>
               
               {/* Barre de navigation avec 4 tabs Sprint 1 */}
               <IonTabBar slot="bottom" className="tab-bar-minimal">
@@ -161,6 +184,7 @@ const AppMinimal: React.FC = () => (
         </IonRouterOutlet>
       </IonReactRouter>
     </IonApp>
+    </ServiceWorkerProvider>
   </Provider>
 );
 

@@ -41,6 +41,15 @@
   opacity: 0.9;
 }
 
+.profile-offline-badge {
+  margin-top: 12px;
+}
+
+.profile-offline-badge p {
+  font-size: 13px;
+  margin: 0;
+}
+
 /* Statistiques */
 .stats-card {
   margin: 20px 10px;
