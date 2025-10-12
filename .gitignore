@@ -1,3 +1,8 @@
+# Fichiers sensibles - ABSOLUMENT PRIORITAIRE
+backend-api/src/config/firebase-service-account.json
+backend-api/src/config/firebase-service-account-*.json
+cms-web/src/config/firebase-service-account.json
+
 # Logs
 logs
 *.log
