@@ -71,7 +71,12 @@ class GeolocationService {
   };
 
   constructor() {
-    this.loadGeofenceRegions();
+    // Ne charger les régions geofence qu'en production ou si l'API est disponible
+    if (!import.meta.env.DEV) {
+      this.loadGeofenceRegions();
+    } else {
+      console.log('ℹ️ Geofencing désactivé en développement');
+    }
   }
 
   /**

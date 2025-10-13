@@ -20,9 +20,15 @@ export const ServiceWorkerProvider: React.FC<ServiceWorkerProviderProps> = ({ ch
   const [toastMessage, setToastMessage] = useState('');
   const [precacheStarted, setPrecacheStarted] = useState(false);
 
-  // Enregistrer le Service Worker au montage
+  // Enregistrer le Service Worker au montage (uniquement en production)
   useEffect(() => {
     const initServiceWorker = async () => {
+      // Ne pas enregistrer le SW en développement
+      if (import.meta.env.DEV) {
+        console.log('ℹ️ Service Worker désactivé en développement');
+        return;
+      }
+
       const registered = await serviceWorkerService.register();
       
       if (registered) {
