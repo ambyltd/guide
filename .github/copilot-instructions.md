@@ -222,4 +222,11 @@ Application de découverte audio guide de la Côte d'Ivoire pour le marché euro
   - [x] **10 feature flags seeded**: social_sharing, advanced_stats, geofencing, offline_mode, background_sync, audio_cache, image_cache, push_notifications, dark_mode, beta_features
   - [x] **Statistiques**: 3395+ lignes, 13 fichiers, Build backend 0 erreurs, Build CMS warnings mineurs
   - [x] **Administration**: Toggle features ON/OFF, Create/Edit/Delete, Analytics dashboard (6 stats cards, 4 charts)
+- [x] **Déploiement GitHub (COMPLÉTÉ - 15 min)**
+  - [x] Repository créé: https://github.com/ambyltd/guide
+  - [x] 567 fichiers poussés (91,930 insertions)
+  - [x] Sécurité: firebase-service-account.json retiré, historique Git nettoyé
+  - [x] Branch main, remote origin configuré
+  - [x] Documentation: GITHUB_DEPLOY_SUCCESS.md, GUIDE_GITHUB_DEPLOY.md
+- [ ] Déploiement Production (Render.com + Netlify)
 - [ ] Tests et finalisations

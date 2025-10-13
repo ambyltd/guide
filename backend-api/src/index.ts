@@ -64,11 +64,14 @@ app.use(cors({
     'http://localhost:5173', // Vite dev server
     'http://localhost:8100', // Ionic dev server
     'https://cotedivoire-audioguide.netlify.app',
+    'https://audio-guide-cms.netlify.app', // CMS Production (à ajuster après déploiement)
     'exp://localhost:19000', // Expo development
     'capacitor://localhost', // Capacitor iOS
     'ionic://localhost', // Capacitor iOS alternative
     'https://localhost', // Capacitor Android
-    'http://localhost' // Capacitor Android alternative
+    'http://localhost', // Capacitor Android alternative
+    /^https:\/\/.*\.netlify\.app$/, // Toutes les previews Netlify
+    /^http:\/\/192\.168\.\d+\.\d+:\d+$/ // Réseau local (device testing)
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],

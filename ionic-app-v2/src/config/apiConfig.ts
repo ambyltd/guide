@@ -14,8 +14,8 @@ const isNative = platform === 'android' || platform === 'ios';
 const LOCAL_IP = '192.168.1.9'; // IP de ton PC (obtenue via ipconfig)
 const LOCAL_PORT = 5000;
 
-// Configuration production (à remplacer par ton URL Render/Railway/etc)
-const PRODUCTION_API_URL = 'https://your-backend.onrender.com';
+// Configuration production (Backend Render.com)
+const PRODUCTION_API_URL = 'https://audio-guide-w8ww.onrender.com';
 
 /**
  * Retourne l'URL de base de l'API selon l'environnement
