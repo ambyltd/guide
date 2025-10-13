@@ -138,19 +138,6 @@ const AppMinimal: React.FC = () => (
                   <Redirect to="/tabs/home" />
                 </Route>
               </IonRouterOutlet>
-
-              {/* Routes hors tabs (pages accessibles depuis Profile) */}
-              <IonRouterOutlet>
-                {/* Page Statistiques Avancées - Sprint 4 Phase 6 */}
-                <Route exact path="/stats">
-                  <StatsPage />
-                </Route>
-
-                {/* Page Leaderboard - Sprint 4 Phase 6 */}
-                <Route exact path="/leaderboard">
-                  <LeaderboardPage />
-                </Route>
-              </IonRouterOutlet>
               
               {/* Barre de navigation avec 4 tabs Sprint 1 */}
               <IonTabBar slot="bottom" className="tab-bar-minimal">
@@ -175,6 +162,17 @@ const AppMinimal: React.FC = () => (
                 </IonTabButton>
               </IonTabBar>
             </IonTabs>
+          </Route>
+
+          {/* Routes hors tabs (pages accessibles depuis Profile) */}
+          {/* Page Statistiques Avancées - Sprint 4 Phase 6 */}
+          <Route exact path="/stats">
+            <StatsPage />
+          </Route>
+
+          {/* Page Leaderboard - Sprint 4 Phase 6 */}
+          <Route exact path="/leaderboard">
+            <LeaderboardPage />
           </Route>
 
           {/* Redirections */}
