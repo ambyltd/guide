@@ -1,4 +1,20 @@
 {
+  "name": "audioguide-cote-ivoire",
+  "version": "1.0.0",
+  "description": "Application de découverte audio guide de la Côte d'Ivoire",
+  "license": "MIT",
+  "private": true,
+  "workspaces": [
+    "backend-api",
+    "cms-web",
+    "ionic-app-v2"
+  ],
+  "scripts": {
+    "start": "echo 'Use npm start in backend-api, cms-web, or ionic-app-v2' && exit 1",
+    "backend": "cd backend-api && npm start",
+    "cms": "cd cms-web && npm start",
+    "mobile": "cd ionic-app-v2 && npm start"
+  },
   "dependencies": {
     "react-router": "^6.28.0",
     "react-router-dom": "^6.28.0"
