@@ -42,6 +42,7 @@ export interface BackendAttraction {
   description: string;
   shortDescription?: string;
   category: string;
+  type?: 'attraction' | 'tour'; // Type de lieu (attraction simple ou circuit touristique)
   city?: string; // Ville
   region?: string; // Région
   location: {

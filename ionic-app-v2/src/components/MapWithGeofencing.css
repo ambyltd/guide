@@ -1,0 +1,194 @@
+/**
+ * MapWithGeofencing Component Styles
+ * Carte interactive avec geofencing pour déclenchement audio automatique
+ */
+
+.map-with-geofencing-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.map-with-geofencing {
+  width: 100%;
+  height: 100%;
+  min-height: 300px;
+}
+
+/* Controls overlay */
+.map-controls {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 10;
+}
+
+.map-control-button {
+  background: white;
+  border: none;
+  border-radius: 8px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.map-control-button:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transform: translateY(-2px);
+}
+
+.map-control-button:active {
+  transform: translateY(0);
+}
+
+.map-control-button ion-icon {
+  font-size: 20px;
+  color: var(--ion-color-primary, #3880ff);
+}
+
+/* Geofence circle on map */
+.geofence-circle {
+  fill: rgba(56, 128, 255, 0.2);
+  stroke: var(--ion-color-primary, #3880ff);
+  stroke-width: 2;
+}
+
+/* Custom marker popup */
+.mapboxgl-popup-content {
+  padding: 12px;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+}
+
+.mapboxgl-popup-content h3 {
+  margin: 0 0 8px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ion-color-dark, #222);
+}
+
+.mapboxgl-popup-content p {
+  margin: 0;
+  font-size: 14px;
+  color: var(--ion-color-medium, #666);
+}
+
+/* Loading state */
+.map-loading {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  z-index: 20;
+}
+
+/* Geofence notification badge */
+.geofence-badge {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--ion-color-success, #2dd36f);
+  color: white;
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  z-index: 15;
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 20px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+/* User location marker pulse animation */
+.user-location-marker {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(56, 128, 255, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 15px rgba(56, 128, 255, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(56, 128, 255, 0);
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .map-controls {
+    top: 8px;
+    right: 8px;
+    gap: 8px;
+  }
+
+  .map-control-button {
+    width: 36px;
+    height: 36px;
+  }
+
+  .map-control-button ion-icon {
+    font-size: 18px;
+  }
+
+  .geofence-badge {
+    bottom: 15px;
+    font-size: 12px;
+    padding: 8px 16px;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .map-control-button {
+    background: var(--ion-color-dark, #1e1e1e);
+  }
+
+  .map-control-button ion-icon {
+    color: var(--ion-color-primary-tint, #4c8dff);
+  }
+
+  .mapboxgl-popup-content {
+    background: var(--ion-color-dark, #1e1e1e);
+  }
+
+  .mapboxgl-popup-content h3 {
+    color: var(--ion-color-light, #f4f4f4);
+  }
+
+  .mapboxgl-popup-content p {
+    color: var(--ion-color-medium-tint, #a0a0a0);
+  }
+
+  .map-loading {
+    background: var(--ion-color-dark, #1e1e1e);
+    color: var(--ion-color-light, #f4f4f4);
+  }
+}

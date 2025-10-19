@@ -23,6 +23,8 @@ import {
   IonChip,
   IonLabel,
   IonText,
+  useIonViewDidEnter,
+  useIonViewWillLeave,
   IonBadge,
 } from '@ionic/react';
 import {
@@ -51,6 +53,7 @@ const MapPage: React.FC = () => {
   const map = useRef<mapboxgl.Map | null>(null);
   const markers = useRef<mapboxgl.Marker[]>([]);
   const userMarker = useRef<mapboxgl.Marker | null>(null);
+  const isMountedRef = useRef(true);
 
   const [attractions, setAttractions] = useState<BackendAttraction[]>([]);
   const [filteredAttractions, setFilteredAttractions] = useState<BackendAttraction[]>([]);
@@ -67,6 +70,7 @@ const MapPage: React.FC = () => {
     sortBy: 'distance',
     showOnlyFavorites: false,
   });
+  const [categoryFilter, setCategoryFilter] = useState<'all' | 'attraction' | 'tour'>('all');
 
   // Geofencing hook (notifications de proximité)
   const { state: geofencingState, startGeofencing, stopGeofencing, checkProximity } = useGeofencing(200);
@@ -75,11 +79,19 @@ const MapPage: React.FC = () => {
   const defaultCenter: [number, number] = [-4.0305, 5.345];
   const defaultZoom = 12;
 
-  // Charger les attractions
-  useEffect(() => {
+  // Charger les données à chaque fois qu'on entre dans la page
+  useIonViewDidEnter(() => {
+    isMountedRef.current = true;
+    console.log('📱 Map - Page active, rechargement des données...');
     loadAttractions();
     getUserLocation();
-  }, []);
+  });
+
+  // Marquer comme inactive quand on quitte la page
+  useIonViewWillLeave(() => {
+    isMountedRef.current = false;
+    console.log('📱 Map - Page inactive');
+  });
 
   // Démarrer le geofencing quand la page est active
   useEffect(() => {
@@ -151,30 +163,25 @@ const MapPage: React.FC = () => {
 
       const [lng, lat] = attraction.location.coordinates;
 
+      // Distinction de couleur basée sur la catégorie
+      const isCircuit = attraction.category?.toLowerCase().includes('circuit') || 
+                        attraction.category?.toLowerCase().includes('tour');
+      const markerColor = isCircuit ? '#9B59B6' : '#3498DB'; // Violet pour circuits, Bleu pour attractions
+
       // Créer l'élément du marker personnalisé
       const el = document.createElement('div');
       el.className = 'custom-marker';
       el.innerHTML = `
-        <div class="marker-icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-            <circle cx="12" cy="10" r="3"></circle>
+        <div class="marker-icon" style="color: ${markerColor};">
+          <svg width="30" height="40" viewBox="0 0 24 32" fill="currentColor" stroke="white" stroke-width="1.5">
+            <path d="M12 0C7.58 0 4 3.58 4 8c0 5.5 8 16 8 16s8-10.5 8-16c0-4.42-3.58-8-8-8zm0 11c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z"></path>
           </svg>
         </div>
       `;
 
-      // Créer le marker
+      // Créer le marker (SANS popup - utilise la carte Ionic à la place)
       const marker = new mapboxgl.Marker(el)
         .setLngLat([lng, lat])
-        .setPopup(
-          new mapboxgl.Popup({ offset: 25 }).setHTML(`
-            <div class="popup-content">
-              <h3>${attraction.name}</h3>
-              <p>${attraction.shortDescription || attraction.description.substring(0, 100)}...</p>
-              <button class="popup-button" data-id="${attraction._id}">Voir les détails</button>
-            </div>
-          `)
-        )
         .addTo(map.current!);
 
       // Clic sur le marker
@@ -195,17 +202,6 @@ const MapPage: React.FC = () => {
       });
       map.current?.fitBounds(bounds, { padding: 50, maxZoom: 15 });
     }
-
-    // Event listener pour les boutons dans les popups
-    setTimeout(() => {
-      document.querySelectorAll('.popup-button').forEach((button) => {
-        button.addEventListener('click', (e) => {
-          const id = (e.target as HTMLElement).getAttribute('data-id');
-          if (id) goToAttraction(id);
-        });
-      });
-    }, 100);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filteredAttractions]);
 
   // Afficher la position de l'utilisateur
@@ -255,6 +251,7 @@ const MapPage: React.FC = () => {
 
   const loadAttractions = async () => {
     try {
+      if (!isMountedRef.current) return;
       setLoading(true);
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
       const response = await axios.get<{ 
@@ -263,6 +260,7 @@ const MapPage: React.FC = () => {
       }>(
         `${apiUrl}/attractions`
       );
+      if (!isMountedRef.current) return;
       if (response.data.success && response.data.data?.attractions) {
         setAttractions(response.data.data.attractions);
         setFilteredAttractions(response.data.data.attractions);
@@ -271,7 +269,9 @@ const MapPage: React.FC = () => {
     } catch (error) {
       console.error('❌ Erreur chargement attractions pour la carte:', error);
     } finally {
-      setLoading(false);
+      if (isMountedRef.current) {
+        setLoading(false);
+      }
     }
   };
 
@@ -300,6 +300,11 @@ const MapPage: React.FC = () => {
     let filtered = [...attractions];
     const favoritesSet = new Set(JSON.parse(localStorage.getItem('favorites') || '[]'));
 
+    // Appliquer filtre de type (categoryFilter: 'all' | 'attraction' | 'tour')
+    if (categoryFilter !== 'all') {
+      filtered = filtered.filter((a) => a.type === categoryFilter);
+    }
+
     // Appliquer catégories
     if (filters.categories.length > 0) {
       filtered = filtered.filter((a) => filters.categories.includes(a.category));
@@ -327,19 +332,21 @@ const MapPage: React.FC = () => {
       );
     }
 
-    console.log(`🗺️ Map - Filtrage: ${filtered.length}/${attractions.length} attractions`);
+    console.log(`🗺️ Map - Filtrage: ${filtered.length}/${attractions.length} attractions (Type: ${categoryFilter})`);
     setFilteredAttractions(filtered);
-  }, [attractions, filters, searchText]);
+  }, [attractions, filters, searchText, categoryFilter]);
 
   const getUserLocation = () => {
     if ('geolocation' in navigator) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
+          if (!isMountedRef.current) return;
           const { longitude, latitude } = position.coords;
           setUserLocation([longitude, latitude]);
           console.log('✅ Position utilisateur obtenue:', { latitude, longitude });
         },
         (error) => {
+          if (!isMountedRef.current) return;
           console.warn('⚠️ Erreur géolocalisation, utilisation position par défaut (Abidjan):', error);
           // Fallback: Centre d'Abidjan, Côte d'Ivoire
           setUserLocation([-4.0082563, 5.3599517]);
@@ -351,6 +358,7 @@ const MapPage: React.FC = () => {
         }
       );
     } else {
+      if (!isMountedRef.current) return;
       // Navigateur ne supporte pas la géolocalisation
       console.warn('⚠️ Géolocalisation non supportée, utilisation position par défaut');
       setUserLocation([-4.0082563, 5.3599517]);
@@ -399,13 +407,13 @@ const MapPage: React.FC = () => {
   };
 
   return (
-    <IonPage>
-      <IonHeader>
-        <IonToolbar>
+    <IonPage className="map-page">
+      <IonHeader translucent className="map-header">
+        <IonToolbar style={{ '--background': 'transparent', '--border-width': '0' }}>
           <IonButtons slot="end">
             {/* Indicateur Geofencing actif */}
             {geofencingState.isActive && (
-              <IonButton disabled>
+              <IonButton disabled style={{ '--background': 'rgba(255, 255, 255, 0.9)', '--border-radius': '50%' }}>
                 <IonIcon icon={notificationsOutline} color="success" />
                 {geofencingState.nearbyAttractions.length > 0 && (
                   <IonBadge color="danger" style={{ marginLeft: '-8px', marginTop: '-8px' }}>
@@ -419,24 +427,79 @@ const MapPage: React.FC = () => {
               <IonIcon icon={locateOutline} />
             </IonButton>
             */}
-            <IonButton onClick={goToList}>
+            <IonButton 
+              onClick={goToList}
+              style={{ 
+                '--background': 'rgba(255, 255, 255, 0.9)', 
+                '--border-radius': '8px',
+                '--box-shadow': '0 2px 8px rgba(0,0,0,0.1)'
+              }}
+            >
               <IonIcon icon={listOutline} />
             </IonButton>
           </IonButtons>
         </IonToolbar>
 
         {/* Barre de recherche */}
-        <IonToolbar>
+        <IonToolbar style={{ '--background': 'transparent', '--border-width': '0', '--padding-top': '8px', '--padding-bottom': '8px' }}>
           <IonSearchbar
             value={searchText}
             onIonInput={(e) => setSearchText(e.detail.value || '')}
             placeholder="Rechercher sur la carte..."
             animated
+            style={{
+              '--background': 'rgba(255, 255, 255, 0.95)',
+              '--border-radius': '12px',
+              '--box-shadow': '0 2px 12px rgba(0,0,0,0.15)',
+              'padding': '0 16px'
+            }}
           />
+        </IonToolbar>
+
+        {/* Filtres catégories */}
+        <IonToolbar style={{ '--background': 'transparent', '--border-width': '0', '--padding-bottom': '4px' }}>
+          <div style={{ 
+            display: 'flex', 
+            gap: '8px', 
+            padding: '0 16px', 
+            overflowX: 'auto',
+            justifyContent: 'center'
+          }}>
+            <IonChip 
+              onClick={() => setCategoryFilter('all')} 
+              color={categoryFilter === 'all' ? 'primary' : 'medium'}
+              style={{ 
+                '--background': categoryFilter === 'all' ? undefined : 'rgba(255, 255, 255, 0.9)',
+                cursor: 'pointer'
+              }}
+            >
+              <IonLabel>Tous</IonLabel>
+            </IonChip>
+            <IonChip 
+              onClick={() => setCategoryFilter('attraction')} 
+              color={categoryFilter === 'attraction' ? 'primary' : 'medium'}
+              style={{ 
+                '--background': categoryFilter === 'attraction' ? undefined : 'rgba(255, 255, 255, 0.9)',
+                cursor: 'pointer'
+              }}
+            >
+              <IonLabel>Attractions</IonLabel>
+            </IonChip>
+            <IonChip 
+              onClick={() => setCategoryFilter('tour')} 
+              color={categoryFilter === 'tour' ? 'primary' : 'medium'}
+              style={{ 
+                '--background': categoryFilter === 'tour' ? undefined : 'rgba(255, 255, 255, 0.9)',
+                cursor: 'pointer'
+              }}
+            >
+              <IonLabel>Circuits</IonLabel>
+            </IonChip>
+          </div>
         </IonToolbar>
       </IonHeader>
 
-      <IonContent fullscreen className="map-page-content">
+      <IonContent fullscreen scrollY={false} className="map-page-content">
         {/* Carte */}
         <div ref={mapContainer} className="map-container" />
 

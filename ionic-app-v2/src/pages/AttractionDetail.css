@@ -201,3 +201,15 @@
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
   }
 }
+
+/* Map section in audioguides tab */
+.map-section {
+  margin-bottom: 20px;
+  border-radius: 12px;
+  overflow: hidden;
+  height: 400px;
+}
+
+.audioguides-list {
+  /* Styles pour la liste d'audioguides */
+}

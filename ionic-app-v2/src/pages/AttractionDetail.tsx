@@ -3,7 +3,7 @@
  * Affiche toutes les informations d'une attraction avec carte, audioguides, galerie photos
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   IonPage,
   IonHeader,
@@ -28,6 +28,8 @@ import {
   IonItem,
   IonThumbnail,
   IonBadge,
+  useIonViewDidEnter,
+  useIonViewWillLeave,
   IonFab,
   IonFabButton,
   IonModal,
@@ -45,7 +47,6 @@ import {
   star,
   starOutline,
   playCircle,
-  mapOutline,
   callOutline,
   globeOutline,
   navigateOutline,
@@ -63,6 +64,7 @@ import axios from 'axios';
 import mapboxgl from 'mapbox-gl';
 import type { BackendAttraction, BackendAudioGuide } from '../types/backend';
 import AudioPlayer from '../components/AudioPlayer';
+import MapWithGeofencing from '../components/MapWithGeofencing';
 import ReportReviewModal from '../components/ReportReviewModal';
 import ShareSheet, { type SharePlatform } from '../components/ShareSheet';
 import { audioCacheService } from '../services/audioCacheService';
@@ -71,22 +73,20 @@ import { favoritesService } from '../services/favoritesService';
 import { userStatsService } from '../services/userStatsService';
 import { moderationService } from '../services/moderationService';
 import { socialShareService } from '../services/socialShareService';
+import { useAuth } from '../hooks/useAuth';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import './AttractionDetail.css';
 
 // Configuration Mapbox
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN || '';
 
-interface RouteParams {
-  id: string;
-}
-
 // Import du type Review depuis le service
 import type { Review } from '../services/reviewsService';
 
 const AttractionDetailPage: React.FC = () => {
-  const { id } = useParams<RouteParams>();
+  const { id } = useParams<{ id: string }>();
   const history = useHistory();
+  const isMountedRef = useRef(true);
   const [attraction, setAttraction] = useState<BackendAttraction | null>(null);
   const [audioGuides, setAudioGuides] = useState<BackendAudioGuide[]>([]);
   const [loading, setLoading] = useState(true);
@@ -110,33 +110,58 @@ const AttractionDetailPage: React.FC = () => {
   const [newReviewComment, setNewReviewComment] = useState('');
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
 
-  // 🚩 États pour la modération
+  // � Récupérer l'utilisateur authentifié depuis Firebase
+  const { user } = useAuth();
+
+  // �🚩 États pour la modération (userId dynamique basé sur Firebase)
   const [reportModalOpen, setReportModalOpen] = useState(false);
   const [reviewToReport, setReviewToReport] = useState<string | null>(null);
-  const currentUserId = 'user-123'; // TODO: Récupérer depuis Firebase Auth
+  const currentUserId = user?.uid || '';
 
   // 🔗 État pour le partage social
   const [showShareSheet, setShowShareSheet] = useState<boolean>(false);
 
-  // Initialiser les services et charger les données
+  // Initialiser les services une seule fois au montage avec Firebase user
   useEffect(() => {
-    // TODO: Récupérer userId et userName depuis Firebase Auth
-    const userId = 'user-123';
-    const userName = 'Utilisateur Test';
-    const userAvatar = 'https://i.pravatar.cc/150?img=1';
+    if (user) {
+      const userId = user.uid;
+      const userName = user.displayName || user.email || 'User';
+      const userAvatar = user.photoURL || 'https://i.pravatar.cc/150?img=1';
 
-    // Initialiser les services
-    favoritesService.initialize(userId, userName);
-    userStatsService.initialize(userId, userName);
-    reviewsService.initialize(userId, userName, userAvatar);
-    
-    console.log('✅ Services initialisés (AttractionDetail):', { userId, userName });
+      // Initialiser les services
+      favoritesService.initialize(userId, userName);
+      userStatsService.initialize(userId, userName);
+      reviewsService.initialize(userId, userName, userAvatar);
 
-    // Charger les données
+      console.log('✅ Services initialisés avec userId:', userId);
+    }
+  }, [user]);
+
+  // Charger les données à chaque fois qu'on entre dans la page OU que l'id change
+  useIonViewDidEnter(() => {
+    isMountedRef.current = true;
+    console.log('📱 AttractionDetail - Page active, rechargement des données pour:', id);
     loadAttraction();
     loadAudioGuides();
     checkFavorite();
     loadReviews();
+  });
+
+  // Marquer comme inactive quand on quitte la page
+  useIonViewWillLeave(() => {
+    isMountedRef.current = false;
+    console.log('📱 AttractionDetail - Page inactive');
+  });
+
+  // Recharger aussi si l'id change (navigation entre différentes attractions)
+  useEffect(() => {
+    if (id) {
+      console.log('🔄 ID changé, rechargement des données pour:', id);
+      loadAttraction();
+      loadAudioGuides();
+      checkFavorite();
+      loadReviews();
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
@@ -150,16 +175,20 @@ const AttractionDetailPage: React.FC = () => {
 
   const loadAttraction = async () => {
     try {
+      if (!isMountedRef.current) return;
       setLoading(true);
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
       const response = await axios.get<{ data: BackendAttraction }>(
         `${apiUrl}/attractions/${id}`
       );
+      if (!isMountedRef.current) return;
       setAttraction(response.data.data);
     } catch (error) {
       console.error('Erreur chargement attraction:', error);
     } finally {
-      setLoading(false);
+      if (isMountedRef.current) {
+        setLoading(false);
+      }
     }
   };
 
@@ -169,6 +198,7 @@ const AttractionDetailPage: React.FC = () => {
       const response = await axios.get<{ success: boolean; data: BackendAudioGuide[] }>(
         `${apiUrl}/audio-guides?attractionId=${id}`
       );
+      if (!isMountedRef.current) return;
       if (response.data.success && Array.isArray(response.data.data)) {
         setAudioGuides(response.data.data);
         console.log('✅ AudioGuides chargés:', response.data.data.length);
@@ -179,8 +209,22 @@ const AttractionDetailPage: React.FC = () => {
   };
 
   const checkFavorite = async () => {
+    // Protection: Ne pas appeler l'API si l'utilisateur n'est pas connecté OU si le token n'est pas prêt
+    const authToken = localStorage.getItem('authToken');
+    if (!user?.uid || !authToken) {
+      console.log('⚠️ Utilisateur non connecté ou token absent, skip checkFavorite API');
+      // Fallback localStorage pour utilisateurs non connectés
+      const savedFavorites = localStorage.getItem('favorites');
+      if (savedFavorites) {
+        const favorites = new Set(JSON.parse(savedFavorites));
+        setIsFavorite(favorites.has(id));
+      }
+      return;
+    }
+
     try {
       const isFav = await favoritesService.isFavorite(id);
+      if (!isMountedRef.current) return;
       setIsFavorite(isFav);
       console.log('✅ Statut favori chargé:', isFav);
     } catch (error) {
@@ -195,15 +239,20 @@ const AttractionDetailPage: React.FC = () => {
 
   const loadReviews = async () => {
     try {
+      if (!isMountedRef.current) return;
       setReviewsLoading(true);
       const response = await reviewsService.getAttractionReviews(id, 1, 20);
+      if (!isMountedRef.current) return;
       setReviews(response.data || []);
       console.log('✅ Reviews chargés:', response.data?.length || 0);
     } catch (error) {
       console.error('❌ Erreur chargement reviews:', error);
+      if (!isMountedRef.current) return;
       setReviews([]);
     } finally {
-      setReviewsLoading(false);
+      if (isMountedRef.current) {
+        setReviewsLoading(false);
+      }
     }
   };
 
@@ -377,6 +426,15 @@ const AttractionDetailPage: React.FC = () => {
   const closePlayer = () => {
     setIsPlayerOpen(false);
     setSelectedAudioGuide(null);
+  };
+
+  // 🗺️ Callback pour le geofencing (déclenchement automatique de l'audio)
+  const handleGeofenceTrigger = (guide: BackendAudioGuide) => {
+    console.log('🎯 Geofence trigger pour audioguide:', guide.title);
+    console.log('✅ Audioguide reçu du geofencing, ouverture du player avec auto-play');
+    setSelectedAudioGuide(guide);
+    setIsPlayerOpen(true);
+    // Le AudioPlayer détectera qu'il vient d'être ouvert et lancera la lecture automatiquement
   };
 
   // 🎵 Vérifier quels audios sont déjà téléchargés
@@ -591,7 +649,13 @@ const AttractionDetailPage: React.FC = () => {
         </div>
 
         {/* Onglets */}
-        <IonSegment value={selectedTab} onIonChange={(e) => setSelectedTab(e.detail.value as 'info' | 'audioguides' | 'photos' | 'reviews')}>
+        <IonSegment 
+          value={selectedTab} 
+          onIonChange={(e) => {
+            const val = e.detail.value;
+            if (val) setSelectedTab(val as 'info' | 'audioguides' | 'photos' | 'reviews');
+          }}
+        >
           <IonSegmentButton value="info">
             <IonLabel>Informations</IonLabel>
           </IonSegmentButton>
@@ -690,65 +754,25 @@ const AttractionDetailPage: React.FC = () => {
               </IonCardContent>
             </IonCard>
 
-            {/* Carte */}
-            <IonCard>
-              <IonCardHeader>
-                <IonCardTitle>Carte</IonCardTitle>
-              </IonCardHeader>
-              <IonCardContent>
-                {attraction.location?.coordinates ? (
-                  <div>
-                    {/* Map Preview Mapbox GL JS */}
-                    <div 
-                      ref={mapContainerRef} 
-                      className="map-preview-container"
-                    />
-                    
-                    {/* Boutons d'action */}
-                    <div className="map-actions">
-                      <IonButton expand="block" onClick={goToMap}>
-                        <IonIcon icon={mapOutline} slot="start" />
-                        Voir en plein écran
-                      </IonButton>
-                      
-                      <IonButton 
-                        expand="block" 
-                        fill="outline"
-                        onClick={() => {
-                          const [lng, lat] = attraction.location.coordinates;
-                          window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`, '_blank');
-                        }}
-                      >
-                        <IonIcon icon={navigateOutline} slot="start" />
-                        Itinéraire
-                      </IonButton>
-                    </div>
-                    
-                    {/* Coordonnées GPS */}
-                    <IonText color="medium" className="gps-coordinates">
-                      <p>
-                        <small>
-                          GPS: {attraction.location.coordinates[1].toFixed(4)}°N, {' '}
-                          {attraction.location.coordinates[0].toFixed(4)}°E
-                        </small>
-                      </p>
-                    </IonText>
-                  </div>
-                ) : (
-                  <div className="map-preview">
-                    <IonText color="medium">
-                      <p>Coordonnées GPS non disponibles</p>
-                    </IonText>
-                  </div>
-                )}
-              </IonCardContent>
-            </IonCard>
+
           </div>
         )}
 
-        {/* Contenu - AudioGuides */}
+        {/* Contenu - AudioGuides avec Carte Interactive */}
         {selectedTab === 'audioguides' && (
           <div className="tab-content">
+            {/* Carte Interactive avec Geofencing */}
+            {attraction && (
+              <div className="map-section">
+                <MapWithGeofencing
+                  attraction={attraction}
+                  audioGuides={audioGuides}
+                  onGeofenceTrigger={handleGeofenceTrigger}
+                />
+              </div>
+            )}
+
+            {/* Liste des AudioGuides */}
             {audioGuides.length === 0 ? (
               <IonCard>
                 <IonCardContent>
@@ -762,7 +786,7 @@ const AttractionDetailPage: React.FC = () => {
                 </IonCardContent>
               </IonCard>
             ) : (
-              <IonList>
+              <div className="audioguides-list">
                 {audioGuides.map((guide) => {
                   const isDownloaded = downloadedAudios.has(guide._id);
                   const isDownloading = downloadingAudios.has(guide._id);
@@ -797,14 +821,14 @@ const AttractionDetailPage: React.FC = () => {
                           </div>
                           {isDownloading && (
                             <div className="download-progress">
-                              <div className="progress-bar" style={{ width: `${progress}%` }} />
+                              <div className="progress-bar"></div>
                               <span className="progress-text">{progress}%</span>
                             </div>
                           )}
                         </IonLabel>
                         {!isDownloaded && !isDownloading && (
-                          <IonButton
-                            fill="clear"
+                          <IonButton 
+                            fill="clear" 
                             slot="end"
                             onClick={(e) => {
                               e.stopPropagation();
@@ -821,7 +845,7 @@ const AttractionDetailPage: React.FC = () => {
                     </IonCard>
                   );
                 })}
-              </IonList>
+              </div>
             )}
           </div>
         )}
