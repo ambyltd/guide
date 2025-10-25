@@ -467,4 +467,39 @@ router.get('/export/:userId', firebaseAuthMiddleware, async (req, res) => {
   }
 });
 
+// ============================================
+// 🚀 Sprint 4 - Advanced Analytics Endpoints
+// ============================================
+
+import {
+  getUserTrends,
+  compareWithPeers,
+  getDashboardAnalytics,
+  trackAction,
+} from '../controllers/analyticsController';
+
+/**
+ * GET /api/analytics/users/:userId/trends
+ * Récupérer les tendances d'activité sur 7j ou 30j
+ */
+router.get('/users/:userId/trends', getUserTrends);
+
+/**
+ * GET /api/analytics/users/:userId/compare
+ * Comparer les stats avec la moyenne des pairs
+ */
+router.get('/users/:userId/compare', compareWithPeers);
+
+/**
+ * GET /api/analytics/dashboard
+ * Analytics globales pour admin
+ */
+router.get('/dashboard', getDashboardAnalytics);
+
+/**
+ * POST /api/analytics/track
+ * Tracker une action utilisateur (créer ActivityLog)
+ */
+router.post('/track', trackAction);
+
 export default router;

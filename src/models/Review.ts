@@ -8,6 +8,17 @@ export interface IReview extends Document {
   comment?: string;
   isModerated: boolean;
   active: boolean;
+  // 🚀 SPRINT 4: Modération avancée
+  moderationStatus: 'pending' | 'approved' | 'rejected';
+  moderatedBy?: mongoose.Types.ObjectId; // Admin qui a modéré
+  moderatedAt?: Date;
+  moderationReason?: string; // Raison du rejet
+  reportCount: number; // Nombre de signalements
+  reportReasons: string[]; // Raisons des signalements
+  reportedBy: mongoose.Types.ObjectId[]; // IDs des utilisateurs ayant signalé
+  helpfulCount: number; // Nombre de "utile"
+  helpfulBy: mongoose.Types.ObjectId[]; // IDs des utilisateurs ayant trouvé utile
+  language: string; // Langue du commentaire (fr, en, etc.)
   createdAt: Date;
   updatedAt: Date;
 }
@@ -24,8 +35,7 @@ const reviewSchema = new Schema<IReview>({
     refPath: 'itemType' // Référence dynamique au modèle basé sur itemType
   },
   userId: { 
-    type: Schema.Types.ObjectId, 
-    ref: 'User', // Assurez-vous d'avoir un modèle User pour les utilisateurs mobiles
+    type: Schema.Types.Mixed, // ✅ Accepte ObjectId ou String
     required: true 
   },
   rating: { 
@@ -44,6 +54,45 @@ const reviewSchema = new Schema<IReview>({
   active: {
     type: Boolean,
     default: true
+  },
+  // 🚀 SPRINT 4: Modération avancée
+  moderationStatus: {
+    type: String,
+    enum: ['pending', 'approved', 'rejected'],
+    default: 'approved' // Auto-approuvé par défaut (peut être changé en 'pending' si modération stricte)
+  },
+  moderatedBy: {
+    type: Schema.Types.ObjectId,
+    ref: 'User'
+  },
+  moderatedAt: {
+    type: Date
+  },
+  moderationReason: {
+    type: String
+  },
+  reportCount: {
+    type: Number,
+    default: 0
+  },
+  reportReasons: [{
+    type: String
+  }],
+  reportedBy: [{
+    type: Schema.Types.ObjectId,
+    ref: 'User'
+  }],
+  helpfulCount: {
+    type: Number,
+    default: 0
+  },
+  helpfulBy: [{
+    type: Schema.Types.ObjectId,
+    ref: 'User'
+  }],
+  language: {
+    type: String,
+    default: 'fr'
   },
 }, {
   timestamps: true

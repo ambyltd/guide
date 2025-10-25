@@ -5,6 +5,7 @@ import { AudioGuide } from '../src/models/AudioGuide';
 import { Tour } from '../src/models/Tour';
 import { User } from '../src/models/User';
 import { Review } from '../src/models/Review';
+import FeatureFlag from '../src/models/FeatureFlag';
 
 dotenv.config();
 
@@ -863,7 +864,8 @@ async function seedDatabase() {
       Attraction.deleteMany({}),
       AudioGuide.deleteMany({}),
       Tour.deleteMany({}),
-      User.deleteMany({})
+      User.deleteMany({}),
+      FeatureFlag.deleteMany({})
     ]);
 
     // Création des attractions
@@ -1026,6 +1028,161 @@ async function seedDatabase() {
     const createdReviews = await Review.insertMany(sampleReviews);
     console.log(`   ✅ ${createdReviews.length} avis créés (${createdReviews.filter(r => r.isModerated).length} modérés, ${createdReviews.filter(r => r.active).length} actifs)`);
 
+    // ============================================
+    // SPRINT 5 - FEATURE FLAGS
+    // ============================================
+    console.log('\n🎛️  Création des feature flags...');
+    const sampleFeatureFlags = [
+      {
+        key: 'social_sharing',
+        name: 'Partage Social',
+        description: 'Permet aux utilisateurs de partager des attractions sur WhatsApp, Facebook, Twitter et autres plateformes sociales.',
+        enabled: true,
+        requiredVersion: '1.4.0',
+        category: 'social',
+        metadata: {
+          icon: 'ShareIcon',
+          color: '#1DA1F2',
+          priority: 1,
+          platforms: ['whatsapp', 'facebook', 'twitter', 'native']
+        }
+      },
+      {
+        key: 'advanced_stats',
+        name: 'Statistiques Avancées',
+        description: 'Affiche des statistiques détaillées avec graphiques (tendances, achievements, comparaison avec pairs).',
+        enabled: true,
+        requiredVersion: '1.4.0',
+        category: 'analytics',
+        metadata: {
+          icon: 'BarChartIcon',
+          color: '#7C3AED',
+          priority: 2,
+          charts: ['line', 'bar', 'pie']
+        }
+      },
+      {
+        key: 'geofencing',
+        name: 'Notifications de Proximité',
+        description: 'Envoie des notifications lorsque l\'utilisateur entre ou sort d\'une zone géographique proche d\'une attraction.',
+        enabled: true,
+        requiredVersion: '1.3.0',
+        category: 'core',
+        metadata: {
+          icon: 'LocationOnIcon',
+          color: '#10B981',
+          priority: 3,
+          radius: 200,
+          notificationTypes: ['entry', 'exit', 'nearby']
+        }
+      },
+      {
+        key: 'offline_mode',
+        name: 'Mode Hors Ligne',
+        description: 'Permet l\'utilisation de l\'application sans connexion internet grâce au cache local (Service Worker).',
+        enabled: true,
+        requiredVersion: '1.3.0',
+        category: 'offline',
+        metadata: {
+          icon: 'CloudOffIcon',
+          color: '#F59E0B',
+          priority: 4,
+          cacheSize: '50MB'
+        }
+      },
+      {
+        key: 'background_sync',
+        name: 'Synchronisation en Arrière-Plan',
+        description: 'Synchronise automatiquement les favoris, avis et statistiques lorsque la connexion est rétablie.',
+        enabled: true,
+        requiredVersion: '1.3.0',
+        category: 'offline',
+        metadata: {
+          icon: 'SyncIcon',
+          color: '#3B82F6',
+          priority: 5,
+          syncInterval: 30,
+          dependencies: ['offline_mode']
+        }
+      },
+      {
+        key: 'audio_cache',
+        name: 'Cache Audio',
+        description: 'Télécharge et stocke les fichiers audio localement pour une lecture hors ligne (IndexedDB).',
+        enabled: true,
+        requiredVersion: '1.3.0',
+        category: 'offline',
+        metadata: {
+          icon: 'AudiotrackIcon',
+          color: '#8B5CF6',
+          priority: 6,
+          maxSize: '100MB',
+          dependencies: ['offline_mode']
+        }
+      },
+      {
+        key: 'image_cache',
+        name: 'Cache Images',
+        description: 'Précache et compresse les images pour un chargement rapide et une utilisation hors ligne (Capacitor Filesystem).',
+        enabled: true,
+        requiredVersion: '1.3.0',
+        category: 'offline',
+        metadata: {
+          icon: 'ImageIcon',
+          color: '#EC4899',
+          priority: 7,
+          maxSize: '200MB',
+          compression: 0.8,
+          dependencies: ['offline_mode']
+        }
+      },
+      {
+        key: 'push_notifications',
+        name: 'Notifications Push',
+        description: 'Envoie des notifications push pour les nouveaux contenus, achievements débloqués et promotions.',
+        enabled: false,
+        requiredVersion: '1.5.0',
+        category: 'experimental',
+        metadata: {
+          icon: 'NotificationsIcon',
+          color: '#EF4444',
+          priority: 8,
+          types: ['achievement', 'content', 'promo', 'reminder']
+        }
+      },
+      {
+        key: 'dark_mode',
+        name: 'Mode Sombre',
+        description: 'Interface en mode sombre pour réduire la fatigue oculaire et économiser la batterie sur écrans OLED.',
+        enabled: false,
+        requiredVersion: '1.5.0',
+        category: 'experimental',
+        metadata: {
+          icon: 'DarkModeIcon',
+          color: '#64748B',
+          priority: 9,
+          autoSwitch: true
+        }
+      },
+      {
+        key: 'beta_features',
+        name: 'Fonctionnalités Beta',
+        description: 'Active les fonctionnalités expérimentales en cours de développement (réalité augmentée, IA, etc.).',
+        enabled: false,
+        requiredVersion: '1.6.0',
+        category: 'experimental',
+        metadata: {
+          icon: 'ScienceIcon',
+          color: '#F97316',
+          priority: 10,
+          features: ['ar_preview', 'ai_recommendations', 'voice_commands']
+        }
+      }
+    ];
+
+    const createdFeatureFlags = await FeatureFlag.insertMany(sampleFeatureFlags);
+    console.log(`   ✅ ${createdFeatureFlags.length} feature flags créés (${createdFeatureFlags.filter(f => f.enabled).length} activés, ${createdFeatureFlags.filter(f => !f.enabled).length} désactivés)`);
+
     // Statistiques finales
     console.log('\n📊 Résumé du seed:');
     console.log(`   📍 ${createdAttractions.length} attractions dans ${new Set(createdAttractions.map(a => a.city)).size} villes`);
@@ -1033,6 +1190,7 @@ async function seedDatabase() {
     console.log(`   🗺️  ${createdTours.length} circuits touristiques`);
     console.log(`   👥 ${createdUsers.length} utilisateurs (${createdUsers.filter(u => u.active).length} actifs)`);
     console.log(`   ⭐ ${createdReviews.length} avis (${createdReviews.filter(r => r.isModerated).length} modérés, ${createdReviews.filter(r => r.active).length} actifs)`);
+    console.log(`   🎛️  ${createdFeatureFlags.length} feature flags (${createdFeatureFlags.filter(f => f.enabled).length} activés)`);
     
     console.log('\n🎯 Données pour tester le generalController:');
     console.log(`   🏛️  Catégories d'attractions: ${new Set(createdAttractions.map(a => a.category)).size}`);
