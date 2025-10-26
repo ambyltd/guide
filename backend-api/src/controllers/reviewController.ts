@@ -65,7 +65,7 @@ const updateAverageRating = async (itemType: 'Attraction' | 'Tour' | 'AudioGuide
  */
 export const createReview = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const { itemId, itemType, rating, comment } = req.body;
+    const { itemId, itemType, rating, comment, userName, userAvatar } = req.body;
     
     // Utiliser l'UID Firebase
     const userId = req.user?.uid;
@@ -98,6 +98,8 @@ export const createReview = async (req: AuthenticatedRequest, res: Response) => 
       itemId,
       itemType,
       userId,
+      userName, // Dénormalisé depuis le frontend
+      userAvatar, // Dénormalisé depuis le frontend
       rating,
       comment,
     });

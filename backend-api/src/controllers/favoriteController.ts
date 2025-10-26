@@ -7,12 +7,21 @@ import mongoose from 'mongoose';
 // POST /api/favorites - Ajouter un favori
 export const addFavorite = async (req: Request, res: Response) => {
   try {
-    const { userId, userName, attractionId } = req.body;
+    // Utiliser le userId du token Firebase (authentification requise)
+    const userId = req.user?.uid;
+    const { userName, attractionId } = req.body;
 
-    if (!userId || !attractionId) {
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        error: 'Authentification requise',
+      });
+    }
+
+    if (!attractionId) {
       return res.status(400).json({
         success: false,
-        error: 'userId et attractionId sont requis',
+        error: 'attractionId est requis',
       });
     }
 
@@ -38,7 +47,7 @@ export const addFavorite = async (req: Request, res: Response) => {
       { userId },
       {
         $inc: { favoriteCount: 1 },
-        $set: { lastActivityAt: new Date(), userName: userName || 'User' },
+        $set: { lastActivityAt: new Date(), userName: userName || req.user?.email || 'User' },
       },
       { upsert: true, new: true }
     );
@@ -68,12 +77,13 @@ export const addFavorite = async (req: Request, res: Response) => {
 export const removeFavorite = async (req: Request, res: Response) => {
   try {
     const { attractionId } = req.params;
-    const { userId } = req.body;
+    // Utiliser le userId du token Firebase (authentification requise)
+    const userId = req.user?.uid;
 
     if (!userId) {
-      return res.status(400).json({
+      return res.status(401).json({
         success: false,
-        error: 'userId est requis',
+        error: 'Authentification requise',
       });
     }
 
@@ -114,12 +124,13 @@ export const removeFavorite = async (req: Request, res: Response) => {
 // GET /api/favorites - Récupérer tous les favoris d'un utilisateur
 export const getUserFavorites = async (req: Request, res: Response) => {
   try {
-    const { userId } = req.query;
+    // Utiliser le userId du token Firebase (authentification requise)
+    const userId = req.user?.uid;
 
     if (!userId) {
-      return res.status(400).json({
+      return res.status(401).json({
         success: false,
-        error: 'userId est requis',
+        error: 'Authentification requise',
       });
     }
 
@@ -150,18 +161,20 @@ export const checkFavorite = async (req: Request, res: Response) => {
     if (!userId) {
       return res.status(400).json({
         success: false,
-        error: 'userId est requis',
+        error: 'userId requis',
       });
     }
 
     const favorite = await Favorite.findOne({
-      userId,
+      userId: userId as string,
       attractionId: new mongoose.Types.ObjectId(attractionId),
     });
 
     res.json({
       success: true,
-      isFavorite: !!favorite,
+      data: {
+        isFavorite: !!favorite,
+      },
     });
   } catch (error) {
     console.error('Erreur checkFavorite:', error);
