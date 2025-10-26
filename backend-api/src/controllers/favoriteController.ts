@@ -77,13 +77,13 @@ export const addFavorite = async (req: Request, res: Response) => {
 export const removeFavorite = async (req: Request, res: Response) => {
   try {
     const { attractionId } = req.params;
-    // Utiliser le userId du token Firebase (authentification requise)
-    const userId = req.user?.uid;
+    // Support userId from query param (like checkFavorite) OR token Firebase
+    const userId = (req.query.userId as string) || req.user?.uid;
 
     if (!userId) {
-      return res.status(401).json({
+      return res.status(400).json({
         success: false,
-        error: 'Authentification requise',
+        error: 'userId requis',
       });
     }
 

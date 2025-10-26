@@ -79,8 +79,7 @@ class FavoritesService {
       const userId = this.getUserId();
       
       const response = await apiClient.delete<{ message: string }>(
-        `/api/favorites/${attractionId}`,
-        { userId }
+        `/api/favorites/${attractionId}?userId=${userId}`
       );
 
       if (response.success) {
