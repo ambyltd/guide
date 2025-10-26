@@ -39,6 +39,7 @@ export const updateUserStats = async (req: Request, res: Response) => {
     // Liste des champs autorisés
     const allowedFields = [
       'userName',
+      'userAvatar',
       'attractionsVisited',
       'audioGuidesListened',
       'toursCompleted',
@@ -208,12 +209,36 @@ export const getLeaderboard = async (req: Request, res: Response) => {
       .limit(limitNum)
       .select('-__v');
 
+    // Ajouter rank et score pour chaque entrée
+    const leaderboardWithRank = leaderboard.map((stats, index) => {
+      const entry: any = stats.toObject();
+      entry.rank = index + 1;
+      
+      // Calculer le score basé sur les activités (même formule que le mobile)
+      const weights = {
+        attractionsVisited: 10,
+        audioGuidesListened: 5,
+        toursCompleted: 20,
+        reviewCount: 15,
+        badges: 25,
+      };
+      
+      entry.score = 
+        (entry.attractionsVisited || 0) * weights.attractionsVisited +
+        (entry.audioGuidesListened || 0) * weights.audioGuidesListened +
+        (entry.toursCompleted || 0) * weights.toursCompleted +
+        (entry.reviewCount || 0) * weights.reviewCount +
+        (entry.badges?.length || 0) * weights.badges;
+      
+      return entry;
+    });
+
     res.json({
       success: true,
-      count: leaderboard.length,
+      count: leaderboardWithRank.length,
       sortBy: sortField,
       timeframe: timeframe || 'all',
-      data: leaderboard,
+      data: leaderboardWithRank,
     });
   } catch (error) {
     console.error('Erreur getLeaderboard:', error);

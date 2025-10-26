@@ -3,6 +3,7 @@ import mongoose, { Schema, Document } from 'mongoose';
 export interface IUserStats extends Document {
   userId: string;
   userName: string;
+  userAvatar?: string;
   attractionsVisited: number;
   audioGuidesListened: number;
   toursCompleted: number;
@@ -27,6 +28,10 @@ const UserStatsSchema: Schema = new Schema(
     userName: {
       type: String,
       required: true,
+    },
+    userAvatar: {
+      type: String,
+      default: '',
     },
     attractionsVisited: {
       type: Number,
