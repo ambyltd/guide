@@ -12,7 +12,12 @@ const config: CapacitorConfig = {
   },
   android: {
     // Autoriser le trafic HTTP non sécurisé en développement
-    allowMixedContent: true
+    allowMixedContent: true,
+    // Ne pas builder automatiquement avec Gradle lors de cap sync
+    buildOptions: {
+      keystorePath: undefined,
+      keystoreAlias: undefined
+    }
   }
 };
 

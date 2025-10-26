@@ -24,6 +24,7 @@ const PRODUCTION_API_URL = 'https://audio-guide-w8ww.onrender.com';
 export function getApiBaseUrl(): string {
   // Toujours utiliser l'URL de production pour tous les environnements
   // Backend déployé sur Render.com : https://audio-guide-w8ww.onrender.com
+  
   return PRODUCTION_API_URL;
   
   /* Configuration avancée (désactivée - à réactiver si backend local nécessaire) :

@@ -13,6 +13,7 @@ import { IonReactRouter } from '@ionic/react-router';
 import { Provider } from 'react-redux';
 import { store } from './store';
 import { homeOutline, mapOutline, heartOutline, personOutline } from 'ionicons/icons';
+import { useAuth } from './hooks/useAuth';
 
 /* Pages Sprint 1 - MVP */
 import Home from './pages/Home';
@@ -63,7 +64,7 @@ import '@ionic/react/css/display.css';
 
 /* import '@ionic/react/css/palettes/dark.always.css'; */
 /* import '@ionic/react/css/palettes/dark.class.css'; */
-import '@ionic/react/css/palettes/dark.system.css';
+/* import '@ionic/react/css/palettes/dark.system.css'; */ // Ionic 8+ only, not available in v7
 
 /* Theme variables */
 import './theme/variables.css';
@@ -71,119 +72,93 @@ import './theme/minimal.css';
 
 setupIonicReact();
 
-const AppMinimal: React.FC = () => (
-  <Provider store={store}>
-    <ServiceWorkerProvider>
-      <IonApp>
-        {/* Indicateur de statut offline */}
-        <OfflineIndicator />
+const TabsNavigation: React.FC = () => {
+  const { isAuthenticated } = useAuth();
+
+  return (
+    <IonTabs>
+      <IonRouterOutlet>
+        <Route exact path="/tabs/home" component={Home} />
+        <Route exact path="/tabs/map" component={Map} />
+        <Route exact path="/tabs/favorites" component={Favorites} />
+        <Route exact path="/tabs/profile" component={Profile} />
+        <Route exact path="/tabs/attraction/:id" component={AttractionDetail} />
+        <Route exact path="/tabs/reservations" component={PaidReservationsPage} />
+        <Route exact path="/tabs">
+          <Redirect to="/tabs/home" />
+        </Route>
+      </IonRouterOutlet>
+      <IonTabBar slot="bottom" className="tab-bar-minimal">
+        <IonTabButton tab="home" href="/tabs/home">
+          <IonIcon aria-hidden="true" icon={homeOutline} />
+          <IonLabel>Accueil</IonLabel>
+        </IonTabButton>
+        <IonTabButton tab="map" href="/tabs/map">
+          <IonIcon aria-hidden="true" icon={mapOutline} />
+          <IonLabel>Carte</IonLabel>
+        </IonTabButton>
+        {/* Tab Favoris : uniquement pour utilisateurs authentifiés */}
+        {isAuthenticated && (
+          <IonTabButton tab="favorites" href="/tabs/favorites">
+            <IonIcon aria-hidden="true" icon={heartOutline} />
+            <IonLabel>Favoris</IonLabel>
+          </IonTabButton>
+        )}
+        <IonTabButton tab="profile" href="/tabs/profile">
+          <IonIcon aria-hidden="true" icon={personOutline} />
+          <IonLabel>Profil</IonLabel>
+        </IonTabButton>
+      </IonTabBar>
+    </IonTabs>
+  );
+};
+
+const AppMinimal: React.FC = () => {
+  console.log('🚀 App initialized - current path:', window.location.pathname);
+  
+  return (
+    <Provider store={store}>
+      <ServiceWorkerProvider>
+        <IonApp>
+          {/* Indicateur de statut offline */}
+          <OfflineIndicator />
         
         <IonReactRouter>
-        <IonRouterOutlet>
-          {/* Routes d'authentification */}
-          <Route exact path="/login">
-            <GuestOnly>
-              <LoginPage />
-            </GuestOnly>
-          </Route>
-          
-          <Route exact path="/register">
-            <GuestOnly>
-              <RegistrationPage />
-            </GuestOnly>
-          </Route>
+          <IonRouterOutlet>
+            {/* Redirect root to tabs */}
+            <Route exact path="/">
+              <Redirect to="/tabs/home" />
+            </Route>
 
-          <Route exact path="/forgot-password">
-            <GuestOnly>
-              <ForgotPasswordPage />
-            </GuestOnly>
-          </Route>
+            {/* Auth routes */}
+            <Route exact path="/login">
+              <GuestOnly>
+                <LoginPage />
+              </GuestOnly>
+            </Route>
+            <Route exact path="/register">
+              <GuestOnly>
+                <RegistrationPage />
+              </GuestOnly>
+            </Route>
+            <Route exact path="/forgot-password">
+              <GuestOnly>
+                <ForgotPasswordPage />
+              </GuestOnly>
+            </Route>
 
-          {/* Application principale avec navigation Sprint 1 */}
-          <Route path="/tabs">
-            <IonTabs>
-              <IonRouterOutlet>
-                {/* Tab 1: Home */}
-                <Route exact path="/tabs/home">
-                  <Home />
-                </Route>
-                
-                {/* Tab 2: Carte */}
-                <Route exact path="/tabs/map">
-                  <Map />
-                </Route>
-                
-                {/* Tab 3: Favoris */}
-                <Route exact path="/tabs/favorites">
-                  <Favorites />
-                </Route>
-                
-                {/* Tab 4: Profile */}
-                <Route exact path="/tabs/profile">
-                  <Profile />
-                </Route>
-                
-                {/* Page de détail d'attraction (accessible depuis Home ou Map) */}
-                <Route exact path="/tabs/attraction/:id">
-                  <AttractionDetail />
-                </Route>
-                
-                {/* Tab Réservations (conservé de l'ancienne version) */}
-                <Route exact path="/tabs/reservations">
-                  <PaidReservationsPage />
-                </Route>
-                
-                {/* Redirection par défaut vers home */}
-                <Route exact path="/tabs">
-                  <Redirect to="/tabs/home" />
-                </Route>
-              </IonRouterOutlet>
-              
-              {/* Barre de navigation avec 4 tabs Sprint 1 */}
-              <IonTabBar slot="bottom" className="tab-bar-minimal">
-                <IonTabButton tab="home" href="/tabs/home">
-                  <IonIcon aria-hidden="true" icon={homeOutline} />
-                  <IonLabel>Accueil</IonLabel>
-                </IonTabButton>
-                
-                <IonTabButton tab="map" href="/tabs/map">
-                  <IonIcon aria-hidden="true" icon={mapOutline} />
-                  <IonLabel>Carte</IonLabel>
-                </IonTabButton>
-                
-                <IonTabButton tab="favorites" href="/tabs/favorites">
-                  <IonIcon aria-hidden="true" icon={heartOutline} />
-                  <IonLabel>Favoris</IonLabel>
-                </IonTabButton>
-                
-                <IonTabButton tab="profile" href="/tabs/profile">
-                  <IonIcon aria-hidden="true" icon={personOutline} />
-                  <IonLabel>Profil</IonLabel>
-                </IonTabButton>
-              </IonTabBar>
-            </IonTabs>
-          </Route>
+            {/* Pages hors tabs */}
+            <Route exact path="/stats" component={StatsPage} />
+            <Route exact path="/leaderboard" component={LeaderboardPage} />
 
-          {/* Routes hors tabs (pages accessibles depuis Profile) */}
-          {/* Page Statistiques Avancées - Sprint 4 Phase 6 */}
-          <Route exact path="/stats">
-            <StatsPage />
-          </Route>
-
-          {/* Page Leaderboard - Sprint 4 Phase 6 */}
-          <Route exact path="/leaderboard">
-            <LeaderboardPage />
-          </Route>
-
-          {/* Redirections */}
-          <Route exact path="/">
-            <Redirect to="/tabs/home" />
-          </Route>
-        </IonRouterOutlet>
-      </IonReactRouter>
-    </IonApp>
+            {/* Tabs navigation - DOIT être en dernier */}
+            <Route path="/tabs" component={TabsNavigation} />
+          </IonRouterOutlet>
+        </IonReactRouter>
+      </IonApp>
     </ServiceWorkerProvider>
   </Provider>
-);
+  );
+};
 
 export default AppMinimal;

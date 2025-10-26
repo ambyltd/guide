@@ -172,8 +172,13 @@ class AdvancedStatsService {
       throw new Error('Failed to fetch trends');
     } catch (error) {
       console.error('[AdvancedStatsService] Error fetching trends:', error);
-      // Fallback: Générer données mockées
-      return this.generateMockTrends(timeframe);
+      // En production, renvoyer des données vides au lieu de mock
+      return {
+        attractionsVisited: [],
+        audioGuidesListened: [],
+        reviewCount: [],
+        totalListeningTime: [],
+      };
     }
   }
 
@@ -344,7 +349,8 @@ class AdvancedStatsService {
 
       // Marquer les achievements débloqués
       achievements.forEach(achievement => {
-        const fieldValue = (stats as any)[achievement.requirement.field] || 0;
+        const field = achievement.requirement.field as keyof typeof stats;
+        const fieldValue = (typeof stats[field] === 'number' ? stats[field] : 0) as number;
         if (fieldValue >= achievement.requirement.threshold) {
           achievement.unlockedAt = stats.updatedAt;
         }
@@ -421,33 +427,7 @@ class AdvancedStatsService {
     );
   }
 
-  /**
-   * Générer des données de tendances mockées (fallback)
-   */
-  private generateMockTrends(timeframe: '7d' | '30d'): UserTrends {
-    const days = timeframe === '7d' ? 7 : 30;
-    const today = new Date();
 
-    const generateTrend = (baseValue: number): TrendData[] => {
-      const data: TrendData[] = [];
-      for (let i = days - 1; i >= 0; i--) {
-        const date = new Date(today);
-        date.setDate(date.getDate() - i);
-        data.push({
-          date: date.toISOString().split('T')[0],
-          value: Math.floor(baseValue + Math.random() * 5),
-        });
-      }
-      return data;
-    };
-
-    return {
-      attractionsVisited: generateTrend(0),
-      audioGuidesListened: generateTrend(0),
-      reviewCount: generateTrend(0),
-      totalListeningTime: generateTrend(0),
-    };
-  }
 
   /**
    * Formater un nombre pour affichage (1000 → 1k)

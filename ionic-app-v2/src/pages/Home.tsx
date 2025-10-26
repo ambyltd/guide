@@ -1,9 +1,9 @@
-﻿/**
+/**
  * Page Home - Écran d'accueil principal
  * Affiche attractions populaires, recherche rapide et accès audioguides
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   IonPage,
   IonHeader,
@@ -18,10 +18,9 @@ import {
   IonButton,
   IonIcon,
   IonChip,
+  useIonViewDidEnter,
+  useIonViewWillLeave,
   IonLabel,
-  IonGrid,
-  IonRow,
-  IonCol,
   IonSpinner,
   IonText,
   IonSegment,
@@ -31,7 +30,6 @@ import {
   IonBadge,
 } from '@ionic/react';
 import {
-  searchOutline,
   locationOutline,
   playCircle,
   heartOutline,
@@ -41,14 +39,18 @@ import {
   navigateOutline,
   timeOutline,
   starOutline,
+  arrowForward,
+  qrCodeOutline,
 } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 import axios from 'axios';
 import SearchFilters, { SearchFiltersState } from '../components/SearchFilters';
+import QRCodeScanner from '../components/QRCodeScanner';
 import { imageCacheService } from '../services/imageCacheService';
 import { backgroundSyncService } from '../services/backgroundSyncService';
 import { favoritesService } from '../services/favoritesService';
 import { userStatsService } from '../services/userStatsService';
+import { useAuth } from '../hooks/useAuth';
 import './Home.css';
 
 interface BackendAudioGuide {
@@ -115,6 +117,7 @@ interface BackendTour {
 
 const HomePage: React.FC = () => {
   const history = useHistory();
+  const isMountedRef = useRef(true);
   const [searchText, setSearchText] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [attractions, setAttractions] = useState<BackendAttraction[]>([]);
@@ -124,6 +127,7 @@ const HomePage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+  const [isQRScannerOpen, setIsQRScannerOpen] = useState(false);
   const [filters, setFilters] = useState<SearchFiltersState>({
     searchText: '',
     categories: [],
@@ -134,31 +138,53 @@ const HomePage: React.FC = () => {
   });
 
   const categories = [
-    { value: 'all', label: 'Tout', icon: searchOutline, isIonicon: true },
+    { value: 'all', label: 'Tous', icon: starOutline, isIonicon: true },
     { value: 'popular', label: 'Populaires', icon: trendingUpOutline, isIonicon: true },
-    { value: 'museum', label: 'Musées', icon: '🎨', isIonicon: false },
-    { value: 'monument', label: 'Monuments', icon: '🏛️', isIonicon: false },
+    { value: 'museum', label: 'Musées', icon: '🏛️', isIonicon: false },
+    { value: 'monument', label: 'Monuments', icon: '🗿', isIonicon: false },
     { value: 'nature', label: 'Nature', icon: '🌿', isIonicon: false },
     { value: 'historical', label: 'Historique', icon: '📜', isIonicon: false },
     { value: 'religious', label: 'Religieux', icon: '⛪', isIonicon: false },
     { value: 'market', label: 'Marchés', icon: '🛒', isIonicon: false },
   ];
 
+  // 🔐 Récupérer l'utilisateur authentifié depuis Firebase
+  const { user } = useAuth();
+
+  // Initialiser les services une seule fois au montage avec Firebase user
   useEffect(() => {
-    // 🔐 Initialiser les services avec l'utilisateur
-    // TODO: Récupérer userId et userName depuis Firebase Auth
-    const userId = 'user-123';
-    const userName = 'Utilisateur Test';
-    
-    favoritesService.initialize(userId, userName);
-    userStatsService.initialize(userId, userName);
-    
-    console.log('✅ Services initialisés:', { userId, userName });
-    
+    if (user) {
+      const userId = user.uid;
+      const userName = user.displayName || user.email || 'User';
+      
+      favoritesService.initialize(userId, userName);
+      userStatsService.initialize(userId, userName);
+      
+      // ✅ Charger les favoris après initialisation
+      loadFavorites();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
+
+  // Charger les données au premier montage (attractions et tours seulement)
+  useEffect(() => {
+    console.log('📱 Home - Montage initial, chargement des données...');
     loadAttractions();
     loadTours();
-    loadFavorites();
+    // loadFavorites() est maintenant appelé dans le useEffect de user
   }, []);
+
+  // Charger les données à chaque fois qu'on entre dans la page (navigation entre tabs)
+  useIonViewDidEnter(() => {
+    isMountedRef.current = true;
+    console.log('📱 Home - Page active (enter)');
+  });
+
+  // Marquer comme inactive quand on quitte la page
+  useIonViewWillLeave(() => {
+    isMountedRef.current = false;
+    console.log('📱 Home - Page inactive (leave)');
+  });
 
   // 🖼️ Précachage automatique des images d'attractions
   useEffect(() => {
@@ -178,9 +204,9 @@ const HomePage: React.FC = () => {
     
     imageCacheService.precacheImages(imageUrls, 'high', (current, total) => {
       const percent = Math.round((current / total) * 100);
-      console.log(`📥 Précachage images: ${current}/${total} (${percent}%)`);
+          console.log(`📊 Précachage images: ${current}/${total} (${percent}%)`);
     }).then(() => {
-      console.log('✅ Précachage images terminé');
+        console.log('✅ Précachage images terminé');
       imageCacheService.getStats().then(stats => {
         console.log(`📊 Cache images: ${stats.totalImages} images, ${imageCacheService.formatBytes(stats.totalSize)}`);
       });
@@ -191,9 +217,11 @@ const HomePage: React.FC = () => {
 
   const loadAttractions = async () => {
     try {
+      if (!isMountedRef.current) return;
       setLoading(true);
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
       const response = await axios.get(`${apiUrl}/attractions`);
+      if (!isMountedRef.current) return;
       if (response.data.success && response.data.data.attractions && Array.isArray(response.data.data.attractions)) {
         const loadedAttractions = response.data.data.attractions;
         setAttractions(loadedAttractions);
@@ -205,9 +233,11 @@ const HomePage: React.FC = () => {
         console.log('✅ Attractions chargées:', loadedAttractions.length);
       }
     } catch (error) {
-      console.error('❌ Erreur chargement attractions:', error);
+      console.error('? Erreur chargement attractions:', error);
     } finally {
-      setLoading(false);
+      if (isMountedRef.current) {
+        setLoading(false);
+      }
     }
   };
 
@@ -215,24 +245,38 @@ const HomePage: React.FC = () => {
     try {
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
       const response = await axios.get(`${apiUrl}/tours`);
+      if (!isMountedRef.current) return;
       if (response.data.success && Array.isArray(response.data.data)) {
         setTours(response.data.data);
         setFilteredTours(response.data.data);
         console.log('✅ Circuits chargés:', response.data.data.length);
       }
     } catch (error) {
-      console.error('❌ Erreur chargement circuits:', error);
+      console.error('? Erreur chargement circuits:', error);
     }
   };
 
-  const loadFavorites = async () => {
+  const loadFavorites = useCallback(async () => {
     try {
-      // Essayer de charger depuis l'API
+      // ⚠️ Vérifier si l'utilisateur est authentifié ET si le token est présent
+      const authToken = localStorage.getItem('authToken');
+      if (!user?.uid || !authToken) {
+        console.log('ℹ️ Utilisateur non connecté ou token absent, chargement favoris depuis localStorage');
+        const saved = localStorage.getItem('favorites');
+        if (saved) {
+          setFavorites(new Set(JSON.parse(saved)));
+        }
+        return;
+      }
+
+      // Essayer de charger depuis l'API (utilisateur connecté)
       const favoriteIds = await favoritesService.getFavoriteIds();
+      if (!isMountedRef.current) return;
       setFavorites(new Set(favoriteIds));
       console.log('✅ Favoris chargés depuis API:', favoriteIds.length);
     } catch (error) {
       console.error('❌ Erreur chargement favoris API, fallback localStorage:', error);
+      if (!isMountedRef.current) return;
       
       // Fallback: Charger depuis localStorage
       const saved = localStorage.getItem('favorites');
@@ -240,10 +284,28 @@ const HomePage: React.FC = () => {
         setFavorites(new Set(JSON.parse(saved)));
       }
     }
-  };
+  }, [user?.uid]);
 
   const toggleFavorite = async (id: string) => {
-    // ⚡ Utiliser favoritesService avec fallback sur backgroundSyncService pour offline
+    // ⚠️ VÉRIFICATION AUTHENTIFICATION - Seuls les utilisateurs connectés peuvent ajouter des favoris
+    if (!user?.uid) {
+      // Afficher un toast d'erreur
+      const toast = document.createElement('ion-toast');
+      toast.message = 'Veuillez vous connecter pour ajouter des favoris';
+      toast.duration = 3000;
+      toast.position = 'top';
+      toast.color = 'warning';
+      document.body.appendChild(toast);
+      toast.present();
+      
+      // Rediriger vers la page de connexion après 2 secondes
+      setTimeout(() => {
+        window.location.href = '/login';
+      }, 2000);
+      return;
+    }
+
+    // 💚 Utiliser favoritesService avec fallback sur backgroundSyncService pour offline
     const isFavorite = favorites.has(id);
 
     try {
@@ -261,7 +323,7 @@ const HomePage: React.FC = () => {
       console.error('❌ Erreur favoritesService (online), fallback sur backgroundSync:', error);
       
       // Fallback: Utiliser backgroundSyncService pour sync automatique en mode offline
-      const userId = 'user-123'; // TODO: Récupérer depuis Firebase Auth
+      const userId = user.uid;
       try {
         if (isFavorite) {
           await backgroundSyncService.removeFavorite(id, userId);
@@ -373,7 +435,7 @@ const HomePage: React.FC = () => {
         break;
     }
 
-    console.log(`🔍 Filtrage: ${filtered.length} attractions, ${filteredToursTemp.length} circuits`);
+    console.log(`?? Filtrage: ${filtered.length} attractions, ${filteredToursTemp.length} circuits`);
     setFilteredAttractions(filtered);
     setFilteredTours(filteredToursTemp);
   }, [searchText, selectedCategory, attractions, tours, filters, favorites]);
@@ -401,42 +463,38 @@ const HomePage: React.FC = () => {
 
   return (
     <IonPage>
-      <IonHeader>
-        <IonToolbar>
-        </IonToolbar>
-      </IonHeader>
-
-      <IonContent fullscreen className="home-page">
-        <div className="hero-section">
-          <h1>Bienvenue en Côte d'Ivoire</h1>
-          <p>Explorez les merveilles culturelles et naturelles</p>
-        </div>
-
-        <div className="search-section">
+      <IonHeader className="ion-no-border" translucent collapse="fade">
+        <IonToolbar style={{ 
+          '--background': 'transparent',
+          '--border-width': '0',
+          '--min-height': '56px'
+        }}>
           <IonSearchbar
             value={searchText}
             onIonInput={(e) => setSearchText(e.detail.value || '')}
             placeholder="Rechercher une attraction..."
             animated
             showCancelButton="focus"
+            style={{
+              '--background': 'white',
+              '--color': 'var(--ion-color-dark)',
+              '--placeholder-color': 'var(--ion-color-medium)',
+              '--icon-color': 'var(--ion-color-primary)',
+              '--border-radius': '12px',
+              '--box-shadow': '0 2px 8px rgba(0,0,0,0.1)',
+              padding: '8px 16px'
+            }}
           />
-          {/* Bouton Filtres avancés temporairement caché
-          <IonButton 
-            fill="outline" 
-            onClick={() => setIsFiltersOpen(true)}
-            className="filters-button"
-          >
-            <IonIcon icon={searchOutline} slot="start" />
-            Filtres avancés
-            {(filters.categories.length > 0 || filters.minRating > 0 || filters.showOnlyFavorites) && (
-              <IonBadge color="primary" style={{ marginLeft: '8px' }}>
-                {(filters.categories.length > 0 ? 1 : 0) + 
-                 (filters.minRating > 0 ? 1 : 0) + 
-                 (filters.showOnlyFavorites ? 1 : 0)}
-              </IonBadge>
-            )}
-          </IonButton>
-          */}
+        </IonToolbar>
+      </IonHeader>
+
+      <IonContent fullscreen className="home-page">
+        {/* Hero section */}
+        <div className="hero-section">
+          <div className="hero-content">
+            <h2>Découvrez la Côte d'Ivoire</h2>
+            <p>Des plages paradisiaques aux sites historiques</p>
+          </div>
         </div>
 
         <div className="categories-section">
@@ -467,8 +525,25 @@ const HomePage: React.FC = () => {
           </div>
         )}
 
+        {/* Section Attractions */}
         {!loading && (
-          <div className="attractions-container">
+          <div className="attractions-section" style={{ marginBottom: '32px' }}>
+            <div style={{ padding: '0 16px', marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <h2 style={{ 
+                  fontSize: '1.6rem', 
+                  fontWeight: 'bold', 
+                  marginBottom: '8px',
+                  color: 'var(--ion-color-primary)'
+                }}>
+                  🏛️ Attractions Populaires
+                </h2>
+                <p style={{ color: 'var(--ion-color-medium)', fontSize: '0.9rem' }}>
+                  Découvrez les sites incontournables
+                </p>
+              </div>
+            </div>
+
             {filteredAttractions.length === 0 ? (
               <IonCard>
                 <IonCardContent>
@@ -480,101 +555,179 @@ const HomePage: React.FC = () => {
                 </IonCardContent>
               </IonCard>
             ) : (
-              <IonGrid>
-                <IonRow>
-                  {filteredAttractions.map((attraction) => {
+              <>
+                <div style={{ 
+                  display: 'flex',
+                  overflowX: 'auto',
+                  gap: '16px',
+                  padding: '0 16px',
+                  scrollSnapType: 'x mandatory',
+                  WebkitOverflowScrolling: 'touch'
+                }}>
+                  {filteredAttractions.slice(0, 7).map((attraction) => {
                     const isFav = favorites.has(attraction._id);
                     return (
-                      <IonCol size="12" sizeMd="6" sizeLg="4" key={attraction._id}>
-                        <IonCard className="attraction-card" onClick={() => goToAttractionDetail(attraction._id)}>
-                          {attraction.images?.[0] && (
-                            <img
-                              src={attraction.images[0]}
-                              alt={attraction.name}
-                              style={{ width: '100%', height: '200px', objectFit: 'cover' }}
+                      <IonCard 
+                        key={attraction._id}
+                        className="attraction-card" 
+                        onClick={() => goToAttractionDetail(attraction._id)}
+                        style={{ 
+                          margin: 0,
+                          minWidth: '280px',
+                          maxWidth: '280px',
+                          flexShrink: 0,
+                          scrollSnapAlign: 'start'
+                        }}
+                      >
+                        {attraction.images?.[0] && (
+                          <img
+                            src={attraction.images[0]}
+                            alt={attraction.name}
+                            style={{ width: '100%', height: '200px', objectFit: 'cover' }}
+                          />
+                        )}
+                        <IonCardHeader>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+                            <IonCardTitle style={{ fontSize: '1.2rem' }}>
+                              {attraction.name}
+                            </IonCardTitle>
+                            <IonIcon
+                              icon={isFav ? heart : heartOutline}
+                              color={isFav ? 'danger' : 'medium'}
+                              style={{ fontSize: '1.5rem', cursor: 'pointer' }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleFavorite(attraction._id);
+                              }}
                             />
-                          )}
-                          <IonCardHeader>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
-                              <IonCardTitle style={{ fontSize: '1.2rem' }}>
-                                {attraction.name}
-                              </IonCardTitle>
-                              <IonIcon
-                                icon={isFav ? heart : heartOutline}
-                                color={isFav ? 'danger' : 'medium'}
-                                style={{ fontSize: '1.5rem', cursor: 'pointer' }}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  toggleFavorite(attraction._id);
-                                }}
-                              />
-                            </div>
-                            <IonCardSubtitle>
-                              <IonIcon icon={locationOutline} style={{ marginRight: '4px' }} />
-                              {attraction.city}, {attraction.region}
-                            </IonCardSubtitle>
-                          </IonCardHeader>
-                          <IonCardContent>
-                            <p style={{ fontSize: '0.9rem', marginBottom: '12px' }}>
-                              {attraction.description?.substring(0, 120)}
-                              {attraction.description && attraction.description.length > 120 ? '...' : ''}
-                            </p>
-                            <div style={{ display: 'flex', gap: '8px', marginBottom: '12px', flexWrap: 'wrap' }}>
-                              <IonChip color="primary" style={{ margin: 0 }}>
-                                <IonLabel>{formatCategory(attraction.category)}</IonLabel>
+                          </div>
+                          <IonCardSubtitle>
+                            <IonIcon icon={locationOutline} style={{ marginRight: '4px' }} />
+                            {attraction.city}, {attraction.region}
+                          </IonCardSubtitle>
+                        </IonCardHeader>
+                        <IonCardContent>
+                          <p style={{ fontSize: '0.9rem', marginBottom: '12px' }}>
+                            {attraction.description?.substring(0, 120)}
+                            {attraction.description && attraction.description.length > 120 ? '...' : ''}
+                          </p>
+                          <div style={{ display: 'flex', gap: '8px', marginBottom: '12px', flexWrap: 'wrap' }}>
+                            <IonChip color="primary" style={{ margin: 0 }}>
+                              <IonLabel>{formatCategory(attraction.category)}</IonLabel>
+                            </IonChip>
+                            {attraction.rating && (
+                              <IonChip color="warning" style={{ margin: 0 }}>
+                                <IonIcon icon={starOutline} />
+                                <IonLabel>{attraction.rating.toFixed(1)}</IonLabel>
                               </IonChip>
-                              {attraction.rating && (
-                                <IonChip color="warning" style={{ margin: 0 }}>
-                                  <IonIcon icon={starOutline} />
-                                  <IonLabel>{attraction.rating.toFixed(1)}</IonLabel>
-                                </IonChip>
-                              )}
-                              {attraction.audioGuides && attraction.audioGuides.length > 0 && (
-                                <IonChip color="secondary" style={{ margin: 0 }}>
-                                  <IonIcon icon={playCircle} />
-                                  <IonLabel>{attraction.audioGuides.length} guides</IonLabel>
-                                </IonChip>
-                              )}
-                            </div>
-                            <div style={{ display: 'flex', gap: '8px' }}>
-                              <IonButton expand="block" onClick={() => goToAttractionDetail(attraction._id)} style={{ flex: 1 }}>
-                                Découvrir
+                            )}
+                            {attraction.audioGuides && attraction.audioGuides.length > 0 && (
+                              <IonChip color="secondary" style={{ margin: 0 }}>
+                                <IonIcon icon={playCircle} />
+                                <IonLabel>{attraction.audioGuides.length} guides</IonLabel>
+                              </IonChip>
+                            )}
+                          </div>
+                          <div style={{ display: 'flex', gap: '8px' }}>
+                            <IonButton expand="block" onClick={() => goToAttractionDetail(attraction._id)} style={{ flex: 1 }}>
+                              Découvrir
+                            </IonButton>
+                            {attraction.audioGuides && attraction.audioGuides.length > 0 && (
+                              <IonButton fill="outline" onClick={(e) => {
+                                e.stopPropagation();
+                                goToAttractionDetail(attraction._id);
+                              }}>
+                                <IonIcon slot="icon-only" icon={playCircle} />
                               </IonButton>
-                              {attraction.audioGuides && attraction.audioGuides.length > 0 && (
-                                <IonButton fill="outline" onClick={(e) => {
-                                  e.stopPropagation();
-                                  goToAttractionDetail(attraction._id);
-                                }}>
-                                  <IonIcon slot="icon-only" icon={playCircle} />
-                                </IonButton>
-                              )}
-                            </div>
-                          </IonCardContent>
-                        </IonCard>
-                      </IonCol>
+                            )}
+                          </div>
+                        </IonCardContent>
+                      </IonCard>
                     );
                   })}
-                </IonRow>
-              </IonGrid>
+
+                  {/* Bouton Voir Plus */}
+                  {filteredAttractions.length > 7 && (
+                    <IonCard 
+                      button
+                      onClick={() => history.push('/tabs/map')}
+                      style={{
+                        minWidth: '280px',
+                        maxWidth: '280px',
+                        flexShrink: 0,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        cursor: 'pointer',
+                        height: '100%'
+                      }}
+                    >
+                      <IonCardContent style={{ textAlign: 'center', padding: '40px 20px' }}>
+                        <IonIcon icon={arrowForward} size="large" color="primary" style={{ fontSize: '48px', marginBottom: '16px' }} />
+                        <h3 style={{ fontSize: '1.2rem', fontWeight: 'bold', marginBottom: '8px' }}>Voir plus</h3>
+                        <p style={{ color: 'var(--ion-color-medium)', fontSize: '0.9rem' }}>
+                          {filteredAttractions.length - 7} autres attractions
+                        </p>
+                      </IonCardContent>
+                    </IonCard>
+                  )}
+                </div>
+              </>
             )}
           </div>
         )}
 
-        {!loading && filteredTours.length > 0 && (
-          <div className="tours-container" style={{ marginTop: '24px' }}>
-            <div style={{ padding: '0 16px', marginBottom: '16px' }}>
-              <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '8px' }}>
-                🗺️ Circuits Touristiques
-              </h2>
-              <p style={{ color: 'var(--ion-color-medium)', fontSize: '0.9rem' }}>
-                Découvrez nos parcours thématiques
-              </p>
+        {/* Section Circuits Touristiques */}
+        {!loading && (
+          <div className="tours-section" style={{ marginBottom: '32px' }}>
+            <div style={{ padding: '0 16px', marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <h2 style={{ 
+                  fontSize: '1.6rem', 
+                  fontWeight: 'bold', 
+                  marginBottom: '8px',
+                  color: 'var(--ion-color-secondary)'
+                }}>
+                  🗺️ Circuits Touristiques
+                </h2>
+                <p style={{ color: 'var(--ion-color-medium)', fontSize: '0.9rem' }}>
+                  Découvrez nos parcours thématiques
+                </p>
+              </div>
             </div>
-            <IonGrid>
-              <IonRow>
-                {filteredTours.map((tour: BackendTour) => (
-                  <IonCol size="12" sizeMd="6" sizeLg="4" key={tour._id}>
-                    <IonCard className="attraction-card">
+
+            {filteredTours.length === 0 ? (
+              <IonCard>
+                <IonCardContent>
+                  <IonText color="medium">
+                    <p style={{ textAlign: 'center', padding: '20px' }}>
+                      Aucun circuit touristique disponible pour le moment.
+                    </p>
+                  </IonText>
+                </IonCardContent>
+              </IonCard>
+            ) : (
+              <>
+                <div style={{ 
+                  display: 'flex',
+                  overflowX: 'auto',
+                  gap: '16px',
+                  padding: '0 16px',
+                  scrollSnapType: 'x mandatory',
+                  WebkitOverflowScrolling: 'touch'
+                }}>
+                  {filteredTours.slice(0, 7).map((tour: BackendTour) => (
+                    <IonCard 
+                      key={tour._id}
+                      className="attraction-card"
+                      style={{ 
+                        margin: 0,
+                        minWidth: '280px',
+                        maxWidth: '280px',
+                        flexShrink: 0,
+                        scrollSnapAlign: 'start'
+                      }}
+                    >
                       {tour.coverImage && (
                         <img
                           src={tour.coverImage}
@@ -588,7 +741,7 @@ const HomePage: React.FC = () => {
                             {tour.name}
                           </IonCardTitle>
                           <IonBadge color={tour.category === 'historic' ? 'primary' : 'secondary'}>
-                            {tour.category === 'historic' ? '📜 Historique' : '🎨 Culturel'}
+                            {tour.category === 'historic' ? '?? Historique' : '?? Culturel'}
                           </IonBadge>
                         </div>
                         <IonCardSubtitle style={{ fontSize: '0.85rem', marginTop: '4px' }}>
@@ -644,19 +797,57 @@ const HomePage: React.FC = () => {
                         </div>
                       </IonCardContent>
                     </IonCard>
-                  </IonCol>
-                ))}
-              </IonRow>
-            </IonGrid>
+                  ))}
+
+                  {/* Bouton Voir Plus */}
+                  {filteredTours.length > 7 && (
+                    <IonCard 
+                      button
+                      onClick={() => history.push('/tabs/map')}
+                      style={{
+                        minWidth: '280px',
+                        maxWidth: '280px',
+                        flexShrink: 0,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        cursor: 'pointer',
+                        height: '100%'
+                      }}
+                    >
+                      <IonCardContent style={{ textAlign: 'center', padding: '40px 20px' }}>
+                        <IonIcon icon={arrowForward} size="large" color="secondary" style={{ fontSize: '48px', marginBottom: '16px' }} />
+                        <h3 style={{ fontSize: '1.2rem', fontWeight: 'bold', marginBottom: '8px' }}>Voir plus</h3>
+                        <p style={{ color: 'var(--ion-color-medium)', fontSize: '0.9rem' }}>
+                          {filteredTours.length - 7} autres circuits
+                        </p>
+                      </IonCardContent>
+                    </IonCard>
+                  )}
+                </div>
+              </>
+            )}
           </div>
         )}
 
         <IonFab vertical="bottom" horizontal="end" slot="fixed">
+          <IonFabButton onClick={() => setIsQRScannerOpen(true)} color="secondary">
+            <IonIcon icon={qrCodeOutline} />
+          </IonFabButton>
+        </IonFab>
+
+        <IonFab vertical="bottom" horizontal="end" slot="fixed" style={{ marginBottom: '70px' }}>
           <IonFabButton onClick={goToMap}>
             <IonIcon icon={mapOutline} />
           </IonFabButton>
         </IonFab>
       </IonContent>
+
+      {/* Scanner QR Code */}
+      <QRCodeScanner
+        isOpen={isQRScannerOpen}
+        onClose={() => setIsQRScannerOpen(false)}
+      />
 
       {/* Filtres avancés */}
       <SearchFilters

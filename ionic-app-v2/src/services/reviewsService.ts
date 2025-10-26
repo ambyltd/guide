@@ -83,15 +83,20 @@ class ReviewsService {
         throw new Error('Le commentaire ne peut pas dépasser 1000 caractères');
       }
 
-      const response = await apiClient.post<Review>('/api/reviews', {
+      const payload = {
+        itemId: data.attractionId,
+        itemType: 'Attraction',
         userId: this.getUserId(),
         userName: this.userName || 'User',
         userAvatar: this.userAvatar,
-        attractionId: data.attractionId,
         rating: data.rating,
         comment: data.comment,
         language: data.language || 'fr',
-      });
+      };
+
+      console.log('[ReviewsService] Payload envoyé:', payload);
+
+      const response = await apiClient.post<Review>('/api/reviews', payload);
 
       if (response.success) {
         console.log('[ReviewsService] Review created successfully');

@@ -3,7 +3,7 @@
  * Affiche toutes les attractions ajoutées en favoris
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   IonPage,
   IonHeader,
@@ -23,6 +23,8 @@ import {
   IonRow,
   IonCol,
   IonSpinner,
+  useIonViewDidEnter,
+  useIonViewWillLeave,
   IonRefresher,
   IonRefresherContent,
 } from '@ionic/react';
@@ -40,30 +42,82 @@ import type { BackendAttraction } from '../types/backend';
 import { backgroundSyncService } from '../services/backgroundSyncService';
 import { favoritesService } from '../services/favoritesService';
 import { userStatsService } from '../services/userStatsService';
+import { apiClient } from '../services/apiClient';
+import { useAuth } from '../hooks/useAuth';
 import './Favorites.css';
 
 const FavoritesPage: React.FC = () => {
   const history = useHistory();
+  const isMountedRef = useRef(true);
   const [favorites, setFavorites] = useState<BackendAttraction[]>([]);
   const [loading, setLoading] = useState(true);
   const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
 
+  // 🔐 Récupérer l'utilisateur authentifié depuis Firebase
+  const { user } = useAuth();
+
+  // Initialiser les services avec Firebase user
   useEffect(() => {
-    // TODO: Récupérer userId et userName depuis Firebase Auth
-    const userId = 'user-123';
-    const userName = 'Utilisateur Test';
+    if (user) {
+      const userId = user.uid;
+      const userName = user.displayName || user.email || 'User';
 
-    // Initialiser les services
-    favoritesService.initialize(userId, userName);
-    userStatsService.initialize(userId, userName);
-    
-    console.log('✅ Services initialisés (Favorites):', { userId, userName });
+      favoritesService.initialize(userId, userName);
+      userStatsService.initialize(userId, userName);
+    }
+  }, [user]);
 
+  // Charger les données à chaque fois qu'on entre dans la page
+  useIonViewDidEnter(() => {
+    isMountedRef.current = true;
+    console.log('📱 Favorites - Page active, rechargement des données...');
     loadFavorites();
-  }, []);
+  });
+
+  // Marquer comme inactive quand on quitte la page
+  useIonViewWillLeave(() => {
+    isMountedRef.current = false;
+    console.log('📱 Favorites - Page inactive');
+  });
 
   const loadFavorites = async () => {
     try {
+      if (!isMountedRef.current) return;
+
+      // Protection: Ne pas appeler l'API si l'utilisateur n'est pas connecté OU si le token n'est pas prêt
+      const authToken = localStorage.getItem('authToken');
+      if (!user?.uid || !authToken) {
+        console.log('⚠️ Utilisateur non connecté ou token absent, skip loadFavorites API, fallback localStorage');
+        // Fallback: charger depuis localStorage
+        const savedFavorites = localStorage.getItem('favorites');
+        if (savedFavorites) {
+          try {
+            const ids = JSON.parse(savedFavorites);
+            setFavoriteIds(new Set(ids));
+            
+            // Charger les données complètes des attractions depuis l'API publique
+            const attractionsData = await Promise.all(
+              ids.map((id: string) => apiClient.get<BackendAttraction>(`/api/attractions/${id}`))
+            );
+            const attractions = attractionsData
+              .filter(response => response.success && response.data)
+              .map(response => response.data!);
+            
+            setFavorites(attractions);
+            console.log('✅ Favoris chargés depuis localStorage:', attractions.length);
+          } catch (err) {
+            console.error('❌ Erreur parsing localStorage favorites:', err);
+            setFavorites([]);
+            setFavoriteIds(new Set());
+          }
+        } else {
+          setFavorites([]);
+          setFavoriteIds(new Set());
+        }
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
 
       // Charger les favoris depuis l'API (retourne les attractions complètes)
@@ -77,6 +131,8 @@ const FavoritesPage: React.FC = () => {
         }
         return '';
       }).filter(Boolean);
+      
+      if (!isMountedRef.current) return;
       setFavoriteIds(new Set(ids));
       
       // Extraire les données d'attraction complètes (type assertion pour éviter conflit de types)
@@ -84,10 +140,13 @@ const FavoritesPage: React.FC = () => {
         .map(fav => fav.attractionId)
         .filter((attr): attr is any => attr !== null && typeof attr === 'object' && '_id' in attr) as BackendAttraction[];
 
+      if (!isMountedRef.current) return;
       setFavorites(attractions);
       console.log('✅ Favoris chargés depuis API:', attractions.length);
     } catch (error) {
       console.error('❌ Erreur chargement favoris API, fallback localStorage:', error);
+      
+      if (!isMountedRef.current) return;
       
       // Fallback: charger depuis localStorage
       const savedFavorites = localStorage.getItem('favorites');
@@ -118,9 +177,12 @@ const FavoritesPage: React.FC = () => {
         .filter((r) => r !== null)
         .map((r) => r!.data.data);
 
+      if (!isMountedRef.current) return;
       setFavorites(attractions);
     } finally {
-      setLoading(false);
+      if (isMountedRef.current) {
+        setLoading(false);
+      }
     }
   };
 
@@ -130,7 +192,12 @@ const FavoritesPage: React.FC = () => {
   };
 
   const removeFavorite = async (attractionId: string) => {
-    const userId = 'user-123'; // TODO: Récupérer depuis Firebase Auth
+    if (!user?.uid) {
+      console.error('❌ Utilisateur non authentifié');
+      return;
+    }
+    
+    const userId = user.uid;
     
     try {
       // Essayer favoritesService (online)

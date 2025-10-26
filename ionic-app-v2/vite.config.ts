@@ -7,86 +7,87 @@ import path from 'path'
 import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vitejs.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
-    // legacy() // Désactivé car incompatible avec BigInt de Mapbox
-    VitePWA({
+    // legacy() // Désactivé car incompatible avec certaines bibliothèques modernes
+    ...(mode === 'production' ? [VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
+      includeAssets: ['favicon.ico', 'logo192.png', 'logo512.png'],
       manifest: {
-        name: 'Audioguide Côte d\'Ivoire',
-        short_name: 'Audioguide CI',
-        description: 'Découvrez la Côte d\'Ivoire avec des guides audio interactifs',
+        name: 'Audio Guide Côte d\'Ivoire',
+        short_name: 'AudioGuide',
+        description: 'Découvrez la Côte d\'Ivoire avec des guides audio',
         theme_color: '#3880ff',
         background_color: '#ffffff',
         display: 'standalone',
         icons: [
           {
-            src: 'pwa-192x192.png',
+            src: 'logo192.png',
             sizes: '192x192',
-            type: 'image/png',
+            type: 'image/png'
           },
           {
-            src: 'pwa-512x512.png',
+            src: 'logo512.png',
             sizes: '512x512',
-            type: 'image/png',
-          },
-          {
-            src: 'pwa-512x512.png',
-            sizes: '512x512',
-            type: 'image/png',
-            purpose: 'any maskable',
-          },
-        ],
+            type: 'image/png'
+          }
+        ]
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,json,vue,txt,woff2}'],
+        // Cache des ressources statiques
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
         runtimeCaching: [
           {
-            urlPattern: /^https:\/\/api\.mapbox\.com\/.*/i,
-            handler: 'CacheFirst',
+            // API Backend - Network First
+            urlPattern: /^https:\/\/audio-guide-w8ww\.onrender\.com\/api\/.*/i,
+            handler: 'NetworkFirst',
             options: {
-              cacheName: 'mapbox-tiles',
+              cacheName: 'api-cache',
               expiration: {
-                maxEntries: 500,
-                maxAgeSeconds: 30 * 24 * 60 * 60, // 30 jours
+                maxEntries: 50,
+                maxAgeSeconds: 5 * 60 // 5 minutes
               },
               cacheableResponse: {
-                statuses: [0, 200],
-              },
-            },
+                statuses: [0, 200]
+              }
+            }
           },
           {
-            urlPattern: /^https:\/\/.*\.(?:png|jpg|jpeg|svg|gif|webp)$/i,
+            // Images - Cache First
+            urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp)$/i,
             handler: 'CacheFirst',
             options: {
               cacheName: 'images-cache',
               expiration: {
-                maxEntries: 200,
-                maxAgeSeconds: 7 * 24 * 60 * 60, // 7 jours
-              },
-            },
+                maxEntries: 100,
+                maxAgeSeconds: 30 * 24 * 60 * 60 // 30 jours
+              }
+            }
           },
           {
-            urlPattern: /^https?:\/\/.*\/api\/.*/i,
-            handler: 'NetworkFirst',
+            // OpenStreetMap tiles - Cache First
+            urlPattern: /^https:\/\/[abc]\.tile\.openstreetmap\.org\/.*/i,
+            handler: 'CacheFirst',
             options: {
-              cacheName: 'api-cache',
-              networkTimeoutSeconds: 10,
+              cacheName: 'osm-tiles-cache',
               expiration: {
-                maxEntries: 100,
-                maxAgeSeconds: 5 * 60, // 5 minutes
+                maxEntries: 500,
+                maxAgeSeconds: 60 * 24 * 60 * 60 // 60 jours
               },
-            },
-          },
-        ],
+              cacheableResponse: {
+                statuses: [0, 200]
+              }
+            }
+          }
+        ]
       },
       devOptions: {
-        enabled: true, // ✅ Activé pour tester le Service Worker en dev
-        type: 'module',
+        enabled: false // Désactivé en dev pour éviter les conflits
       },
-    }),
+      filename: 'sw.js', // Nom du service worker
+      strategies: 'generateSW' // Générer automatiquement
+    })] : []),
   ],
   resolve: {
     alias: {
@@ -107,7 +108,7 @@ export default defineConfig({
           'vendor-react': ['react', 'react-dom', 'react-router-dom'],
           'vendor-ionic': ['@ionic/react', '@ionic/react-router'],
           'vendor-firebase': ['firebase/app', 'firebase/auth'],
-          'vendor-mapbox': ['mapbox-gl']
+          'vendor-leaflet': ['leaflet', 'react-leaflet']
         }
       }
     }
@@ -123,4 +124,4 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: './src/setupTests.ts',
   }
-})
+}))

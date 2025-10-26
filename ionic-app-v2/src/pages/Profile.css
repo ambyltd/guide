@@ -2,11 +2,44 @@
  * Page Profil - Styles
  */
 
+/* Header transparent effect */
+.profile-header-transparent {
+  --background: transparent !important;
+}
+
+.profile-header-transparent ion-toolbar {
+  --background: transparent !important;
+  --border-width: 0 !important;
+}
+
+/* Logo circulaire dans header */
+.profile-logo-container {
+  margin-left: 16px;
+  margin-top: 8px;
+}
+
+.profile-logo {
+  width: 44px;
+  height: 44px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: 2px solid white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.profile-logo-icon {
+  font-size: 24px;
+  color: white;
+}
+
 .profile-header {
   text-align: center;
-  padding: 40px 20px;
+  padding: 80px 20px 40px; /* Augmenté padding-top pour compenser header transparent */
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
+  margin-top: -20px; /* Pour que le gradient commence derrière le header */
 }
 
 .profile-avatar {

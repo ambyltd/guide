@@ -3,7 +3,7 @@
  */
 
 import React from 'react';
-import { Redirect, Route } from 'react-router-dom';
+import { Redirect, Route, Switch } from 'react-router-dom';
 import {
   IonTabs,
   IonTabBar,
@@ -32,20 +32,15 @@ const Tabs: React.FC = () => {
   return (
     <IonTabs>
       <IonRouterOutlet>
-        {/* Routes principales */}
-        <Route exact path="/home" component={HomePage} />
-        <Route exact path="/map" component={MapPage} />
-        <Route exact path="/audioguides" component={AudioGuidesPage} />
-        <Route exact path="/favorites" component={FavoritesPage} />
-        <Route exact path="/profile" component={ProfilePage} />
-        
-        {/* Route détails attraction */}
-        <Route exact path="/attraction/:id" component={AttractionDetailPage} />
-        
-        {/* Redirection par défaut */}
-        <Route exact path="/">
-          <Redirect to="/home" />
-        </Route>
+        <Switch>
+          <Route exact path="/home" component={HomePage} />
+          <Route exact path="/map" component={MapPage} />
+          <Route exact path="/audioguides" component={AudioGuidesPage} />
+          <Route exact path="/favorites" component={FavoritesPage} />
+          <Route exact path="/profile" component={ProfilePage} />
+          <Route exact path="/attraction/:id" component={AttractionDetailPage} />
+          <Route exact path="/" render={() => <Redirect to="/home" />} />
+        </Switch>
       </IonRouterOutlet>
 
       {/* Barre de navigation */}

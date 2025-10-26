@@ -5,6 +5,7 @@
 
 import React from 'react';
 import { Redirect } from 'react-router-dom';
+// (pas de changement ici, mais s'assurer que l'import est bien là)
 import { IonSpinner, IonContent, IonPage } from '@ionic/react';
 import { useAuth } from '../hooks/useAuth';
 
@@ -87,7 +88,7 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({
 // ===== COMPOSANT POUR INVITÉS SEULEMENT =====
 export const GuestOnly: React.FC<GuestOnlyProps> = ({ 
   children, 
-  redirectTo = '/home' 
+  redirectTo = '/tabs/home' 
 }) => {
   const { loading, isAuthenticated } = useAuth();
 

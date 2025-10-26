@@ -2,7 +2,7 @@
  * Page Profil Utilisateur
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   IonPage,
   IonHeader,
@@ -19,6 +19,8 @@ import {
   IonCardContent,
   IonAlert,
   IonToggle,
+  useIonViewDidEnter,
+  useIonViewWillLeave,
 } from '@ionic/react';
 import {
   personOutline,
@@ -28,6 +30,7 @@ import {
   languageOutline,
   helpCircleOutline,
   informationCircleOutline,
+  compassOutline,
 } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 import { authService } from '../services/authService';
@@ -37,6 +40,7 @@ import { imageCacheService } from '../services/imageCacheService';
 import { audioCacheService } from '../services/audioCacheService';
 import { backgroundSyncService } from '../services/backgroundSyncService';
 import { userStatsService } from '../services/userStatsService';
+import { useAuth } from '../hooks/useAuth';
 import './Profile.css';
 
 interface User {
@@ -51,6 +55,7 @@ interface User {
 
 const ProfilePage: React.FC = () => {
   const history = useHistory();
+  const isMountedRef = useRef(true);
   const [user, setUser] = useState<User | null>(null);
   const [showLogoutAlert, setShowLogoutAlert] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
@@ -68,21 +73,34 @@ const ProfilePage: React.FC = () => {
   const [userStats, setUserStats] = useState<any>(null);
   const [userBadges, setUserBadges] = useState<any[]>([]);
 
+  // 🔐 Récupérer l'utilisateur authentifié depuis Firebase
+  const { user: firebaseUser } = useAuth();
+
+  // Initialiser userStatsService avec Firebase user
   useEffect(() => {
-    // TODO: Récupérer userId et userName depuis Firebase Auth
-    const userId = 'user-123';
-    const userName = 'Utilisateur Test';
+    if (firebaseUser) {
+      const userId = firebaseUser.uid;
+      const userName = firebaseUser.displayName || firebaseUser.email || 'User';
 
-    // Initialiser userStatsService
-    userStatsService.initialize(userId, userName);
-    
-    console.log('✅ userStatsService initialisé (Profile):', { userId, userName });
+      userStatsService.initialize(userId, userName);
+    }
+  }, [firebaseUser]);
 
+  // Charger les données à chaque fois qu'on entre dans la page
+  useIonViewDidEnter(() => {
+    isMountedRef.current = true;
+    console.log('📱 Profile - Page active, rechargement des données...');
     loadUserProfile();
     loadPreferences();
     loadCacheStats();
     loadUserStats();
-  }, []);
+  });
+
+  // Marquer comme inactive quand on quitte la page
+  useIonViewWillLeave(() => {
+    isMountedRef.current = false;
+    console.log('📱 Profile - Page inactive');
+  });
 
   // 📊 Charger les statistiques de cache
   const loadCacheStats = async () => {
@@ -91,6 +109,8 @@ const ProfilePage: React.FC = () => {
         imageCacheService.getStats(),
         audioCacheService.getStats(),
       ]);
+
+      if (!isMountedRef.current) return;
 
       const syncStats = backgroundSyncService.getStats();
 
@@ -114,10 +134,12 @@ const ProfilePage: React.FC = () => {
   const loadUserStats = async () => {
     try {
       const stats = await userStatsService.getUserStats();
+      if (!isMountedRef.current) return;
       setUserStats(stats);
 
       // Vérifier et attribuer les badges automatiquement
       const newBadges = await userStatsService.checkAndAwardBadges();
+      if (!isMountedRef.current) return;
       if (newBadges.length > 0) {
         console.log('🏆 Nouveaux badges attribués:', newBadges);
       }
@@ -154,7 +176,7 @@ const ProfilePage: React.FC = () => {
   const handleLogout = async () => {
     try {
       await authService.signOut();
-      history.replace('/login');
+      history.push('/tabs/home', { replace: true });
     } catch (error) {
       console.error('Erreur déconnexion:', error);
     }
@@ -174,11 +196,16 @@ const ProfilePage: React.FC = () => {
   if (!user) {
     return (
       <IonPage>
-        <IonHeader>
-          <IonToolbar>
+        <IonHeader translucent className="profile-header-transparent">
+          <IonToolbar style={{ '--background': 'transparent', '--border-width': '0' }}>
+            <div slot="start" className="profile-logo-container">
+              <IonAvatar className="profile-logo">
+                <IonIcon icon={compassOutline} className="profile-logo-icon" />
+              </IonAvatar>
+            </div>
           </IonToolbar>
         </IonHeader>
-        <IonContent>
+        <IonContent fullscreen>
           <div className="not-logged-container">
             <IonText>
               <h2>Non connecté</h2>
@@ -195,12 +222,17 @@ const ProfilePage: React.FC = () => {
 
   return (
     <IonPage>
-      <IonHeader>
-        <IonToolbar>
+      <IonHeader translucent className="profile-header-transparent">
+        <IonToolbar style={{ '--background': 'transparent', '--border-width': '0' }}>
+          <div slot="start" className="profile-logo-container">
+            <IonAvatar className="profile-logo">
+              <IonIcon icon={compassOutline} className="profile-logo-icon" />
+            </IonAvatar>
+          </div>
         </IonToolbar>
       </IonHeader>
 
-      <IonContent>
+      <IonContent fullscreen>
         {/* En-tête profil */}
         <div className="profile-header">
           <IonAvatar className="profile-avatar">

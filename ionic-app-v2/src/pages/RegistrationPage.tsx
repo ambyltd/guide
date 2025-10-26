@@ -1,29 +1,24 @@
 import React, { useState } from 'react';
 import {
   IonContent,
-  IonHeader,
   IonPage,
-  IonToolbar,
-  IonItem,
-  IonLabel,
-  IonInput,
-  IonButton,
-  IonCard,
-  IonCardContent,
-  IonCardHeader,
-  IonCardTitle,
   IonText,
   IonSpinner,
   IonCheckbox,
-  IonSelect,
-  IonSelectOption,
-  IonBackButton,
-  IonButtons,
-  IonGrid,
-  IonRow,
-  IonCol,
+  IonIcon,
   IonAlert
 } from '@ionic/react';
+import {
+  mailOutline,
+  lockClosedOutline,
+  personOutline,
+  callOutline,
+  globeOutline,
+  languageOutline,
+  arrowBackOutline,
+  checkmarkCircleOutline,
+  shieldCheckmarkOutline
+} from 'ionicons/icons';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { auth } from '../config/firebase';
 import { useHistory } from 'react-router-dom';
@@ -227,211 +222,274 @@ const RegistrationPage: React.FC = () => {
 
   return (
     <IonPage>
-      <IonHeader>
-        <IonToolbar>
-          <IonButtons slot="start">
-            <IonBackButton defaultHref="/login" />
-          </IonButtons>
-        </IonToolbar>
-      </IonHeader>
+      <IonContent fullscreen className="registration-page">
+        {/* Background Animation */}
+        <div className="background-animation">
+          <div className="animated-circle circle-1"></div>
+          <div className="animated-circle circle-2"></div>
+          <div className="animated-circle circle-3"></div>
+          <div className="animated-grid"></div>
+        </div>
 
-      <IonContent fullscreen className="registration-content">
-        <IonGrid>
-          <IonRow className="ion-justify-content-center">
-            <IonCol size="12" sizeMd="8" sizeLg="6">
+        {/* Header avec bouton retour */}
+        <div className="registration-header">
+          <button 
+            onClick={() => history.push('/login')} 
+            className="back-btn"
+            title="Retour à la page de connexion"
+            aria-label="Retour à la page de connexion"
+          >
+            <IonIcon icon={arrowBackOutline} />
+          </button>
+          <h1 className="page-title">Créer un compte</h1>
+          <div className="subtitle">Rejoignez l'aventure Audio Guide</div>
+        </div>
+
+        <div className="registration-container">
+          <div className="registration-form">
+            
+            {/* Erreur générale */}
+            {errors.general && (
+              <div className="error-banner">
+                <IonText color="danger">{errors.general}</IonText>
+              </div>
+            )}
+
+            {/* Formulaire Multi-étapes */}
+            <div className="form-steps">
               
-              <IonCard className="registration-card">
-                <IonCardHeader>
-                  <IonCardTitle className="ion-text-center">
-                    Rejoignez Audio Guide Côte d'Ivoire
-                  </IonCardTitle>
-                </IonCardHeader>
+              {/* Section Compte */}
+              <div className="form-section">
+                <div className="section-header">
+                  <IonIcon icon={shieldCheckmarkOutline} className="section-icon" />
+                  <h2>Informations de connexion</h2>
+                </div>
 
-                <IonCardContent>
-                  {errors.general && (
-                    <IonText color="danger" className="error-text">
-                      <p>{errors.general}</p>
-                    </IonText>
-                  )}
-
-                  {/* Email */}
-                  <IonItem className={errors.email ? 'ion-invalid' : ''}>
-                    <IonLabel position="stacked">Email *</IonLabel>
-                    <IonInput
+                {/* Email */}
+                <div className="input-group">
+                  <IonIcon icon={mailOutline} className="input-icon" />
+                  <div className="input-wrapper">
+                    <input
                       type="email"
                       value={formData.email}
-                      onIonInput={(e) => handleInputChange('email', e.detail.value!)}
+                      onChange={(e) => handleInputChange('email', e.target.value)}
                       placeholder="votre.email@exemple.com"
                       disabled={loading}
+                      className={errors.email ? 'error' : ''}
                     />
-                  </IonItem>
-                  {errors.email && (
-                    <IonText color="danger" className="error-text">
-                      <small>{errors.email}</small>
-                    </IonText>
-                  )}
+                    <label className="floating-label">Email *</label>
+                  </div>
+                </div>
+                {errors.email && (
+                  <div className="error-message">
+                    <small>{errors.email}</small>
+                  </div>
+                )}
 
-                  {/* Mot de passe */}
-                  <IonItem className={errors.password ? 'ion-invalid' : ''}>
-                    <IonLabel position="stacked">Mot de passe *</IonLabel>
-                    <IonInput
+                {/* Mot de passe */}
+                <div className="input-group">
+                  <IonIcon icon={lockClosedOutline} className="input-icon" />
+                  <div className="input-wrapper">
+                    <input
                       type="password"
                       value={formData.password}
-                      onIonInput={(e) => handleInputChange('password', e.detail.value!)}
+                      onChange={(e) => handleInputChange('password', e.target.value)}
                       placeholder="Minimum 6 caractères"
                       disabled={loading}
+                      className={errors.password ? 'error' : ''}
                     />
-                  </IonItem>
-                  {errors.password && (
-                    <IonText color="danger" className="error-text">
-                      <small>{errors.password}</small>
-                    </IonText>
-                  )}
+                    <label className="floating-label">Mot de passe *</label>
+                  </div>
+                </div>
+                {errors.password && (
+                  <div className="error-message">
+                    <small>{errors.password}</small>
+                  </div>
+                )}
 
-                  {/* Confirmation mot de passe */}
-                  <IonItem className={errors.confirmPassword ? 'ion-invalid' : ''}>
-                    <IonLabel position="stacked">Confirmer le mot de passe *</IonLabel>
-                    <IonInput
+                {/* Confirmation mot de passe */}
+                <div className="input-group">
+                  <IonIcon icon={lockClosedOutline} className="input-icon" />
+                  <div className="input-wrapper">
+                    <input
                       type="password"
                       value={formData.confirmPassword}
-                      onIonInput={(e) => handleInputChange('confirmPassword', e.detail.value!)}
+                      onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
                       placeholder="Répétez votre mot de passe"
                       disabled={loading}
+                      className={errors.confirmPassword ? 'error' : ''}
                     />
-                  </IonItem>
-                  {errors.confirmPassword && (
-                    <IonText color="danger" className="error-text">
-                      <small>{errors.confirmPassword}</small>
-                    </IonText>
-                  )}
+                    <label className="floating-label">Confirmer le mot de passe *</label>
+                  </div>
+                </div>
+                {errors.confirmPassword && (
+                  <div className="error-message">
+                    <small>{errors.confirmPassword}</small>
+                  </div>
+                )}
+              </div>
 
-                  {/* Nom d'affichage */}
-                  <IonItem className={errors.displayName ? 'ion-invalid' : ''}>
-                    <IonLabel position="stacked">Nom d'affichage *</IonLabel>
-                    <IonInput
+              {/* Section Profil */}
+              <div className="form-section">
+                <div className="section-header">
+                  <IonIcon icon={personOutline} className="section-icon" />
+                  <h2>Informations personnelles</h2>
+                </div>
+
+                {/* Nom d'affichage */}
+                <div className="input-group">
+                  <IonIcon icon={personOutline} className="input-icon" />
+                  <div className="input-wrapper">
+                    <input
                       type="text"
                       value={formData.displayName}
-                      onIonInput={(e) => handleInputChange('displayName', e.detail.value!)}
+                      onChange={(e) => handleInputChange('displayName', e.target.value)}
                       placeholder="Comment vous souhaitez être appelé"
                       disabled={loading}
+                      className={errors.displayName ? 'error' : ''}
                     />
-                  </IonItem>
-                  {errors.displayName && (
-                    <IonText color="danger" className="error-text">
-                      <small>{errors.displayName}</small>
-                    </IonText>
-                  )}
+                    <label className="floating-label">Nom d'affichage *</label>
+                  </div>
+                </div>
+                {errors.displayName && (
+                  <div className="error-message">
+                    <small>{errors.displayName}</small>
+                  </div>
+                )}
 
-                  {/* Prénom */}
-                  <IonItem>
-                    <IonLabel position="stacked">Prénom</IonLabel>
-                    <IonInput
-                      type="text"
-                      value={formData.firstName}
-                      onIonInput={(e) => handleInputChange('firstName', e.detail.value!)}
-                      placeholder="Votre prénom"
-                      disabled={loading}
-                    />
-                  </IonItem>
+                {/* Prénom et Nom (Grid 2 colonnes) */}
+                <div className="input-grid">
+                  <div className="input-group">
+                    <IonIcon icon={personOutline} className="input-icon" />
+                    <div className="input-wrapper">
+                      <input
+                        type="text"
+                        value={formData.firstName}
+                        onChange={(e) => handleInputChange('firstName', e.target.value)}
+                        placeholder="Votre prénom"
+                        disabled={loading}
+                      />
+                      <label className="floating-label">Prénom</label>
+                    </div>
+                  </div>
 
-                  {/* Nom */}
-                  <IonItem>
-                    <IonLabel position="stacked">Nom</IonLabel>
-                    <IonInput
-                      type="text"
-                      value={formData.lastName}
-                      onIonInput={(e) => handleInputChange('lastName', e.detail.value!)}
-                      placeholder="Votre nom de famille"
-                      disabled={loading}
-                    />
-                  </IonItem>
+                  <div className="input-group">
+                    <IonIcon icon={personOutline} className="input-icon" />
+                    <div className="input-wrapper">
+                      <input
+                        type="text"
+                        value={formData.lastName}
+                        onChange={(e) => handleInputChange('lastName', e.target.value)}
+                        placeholder="Votre nom de famille"
+                        disabled={loading}
+                      />
+                      <label className="floating-label">Nom</label>
+                    </div>
+                  </div>
+                </div>
 
-                  {/* Téléphone */}
-                  <IonItem>
-                    <IonLabel position="stacked">Numéro de téléphone</IonLabel>
-                    <IonInput
+                {/* Téléphone */}
+                <div className="input-group">
+                  <IonIcon icon={callOutline} className="input-icon" />
+                  <div className="input-wrapper">
+                    <input
                       type="tel"
                       value={formData.phoneNumber}
-                      onIonInput={(e) => handleInputChange('phoneNumber', e.detail.value!)}
+                      onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
                       placeholder="+225 XX XX XX XX"
                       disabled={loading}
                     />
-                  </IonItem>
+                    <label className="floating-label">Téléphone</label>
+                  </div>
+                </div>
 
-                  {/* Nationalité */}
-                  <IonItem>
-                    <IonLabel position="stacked">Nationalité</IonLabel>
-                    <IonInput
-                      type="text"
-                      value={formData.nationality}
-                      onIonInput={(e) => handleInputChange('nationality', e.detail.value!)}
-                      placeholder="Votre nationalité"
-                      disabled={loading}
-                    />
-                  </IonItem>
+                {/* Nationalité et Langue (Grid 2 colonnes) */}
+                <div className="input-grid">
+                  <div className="input-group">
+                    <IonIcon icon={globeOutline} className="input-icon" />
+                    <div className="input-wrapper">
+                      <input
+                        type="text"
+                        value={formData.nationality}
+                        onChange={(e) => handleInputChange('nationality', e.target.value)}
+                        placeholder="Votre nationalité"
+                        disabled={loading}
+                      />
+                      <label className="floating-label">Nationalité</label>
+                    </div>
+                  </div>
 
-                  {/* Langue */}
-                  <IonItem>
-                    <IonLabel position="stacked">Langue préférée</IonLabel>
-                    <IonSelect
-                      value={formData.language}
-                      onIonChange={(e) => handleInputChange('language', e.detail.value)}
-                      disabled={loading}
-                    >
-                      <IonSelectOption value="fr">Français</IonSelectOption>
-                      <IonSelectOption value="en">English</IonSelectOption>
-                    </IonSelect>
-                  </IonItem>
+                  <div className="input-group">
+                    <IonIcon icon={languageOutline} className="input-icon" />
+                    <div className="input-wrapper">
+                      <select
+                        value={formData.language}
+                        onChange={(e) => handleInputChange('language', e.target.value)}
+                        disabled={loading}
+                        className="language-select"
+                        title="Sélectionner votre langue préférée"
+                        aria-label="Langue préférée"
+                      >
+                        <option value="fr">Français 🇫🇷</option>
+                        <option value="en">English 🇬🇧</option>
+                      </select>
+                      <label className="floating-label">Langue</label>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
-                  {/* Conditions d'utilisation */}
-                  <IonItem className={errors.acceptTerms ? 'ion-invalid' : ''}>
-                    <IonCheckbox
-                      checked={formData.acceptTerms}
-                      onIonChange={(e) => handleInputChange('acceptTerms', e.detail.checked)}
-                      disabled={loading}
-                    />
-                    <IonLabel className="ion-margin-start">
-                      J'accepte les <IonText color="primary">conditions d'utilisation</IonText> et la <IonText color="primary">politique de confidentialité</IonText>
-                    </IonLabel>
-                  </IonItem>
-                  {errors.acceptTerms && (
-                    <IonText color="danger" className="error-text">
-                      <small>{errors.acceptTerms}</small>
-                    </IonText>
-                  )}
-
-                  {/* Bouton d'inscription */}
-                  <IonButton
-                    expand="block"
-                    onClick={handleRegister}
+              {/* Conditions d'utilisation */}
+              <div className="terms-section">
+                <div className="checkbox-wrapper">
+                  <IonCheckbox
+                    checked={formData.acceptTerms}
+                    onIonChange={(e) => handleInputChange('acceptTerms', e.detail.checked)}
                     disabled={loading}
-                    className="ion-margin-top"
-                  >
-                    {loading ? (
-                      <>
-                        <IonSpinner name="crescent" />
-                        <span className="ion-margin-start">Création du compte...</span>
-                      </>
-                    ) : (
-                      'Créer mon compte'
-                    )}
-                  </IonButton>
+                    className={errors.acceptTerms ? 'error' : ''}
+                  />
+                  <label onClick={() => handleInputChange('acceptTerms', !formData.acceptTerms)}>
+                    J'accepte les <span className="link">conditions d'utilisation</span> et la <span className="link">politique de confidentialité</span>
+                  </label>
+                </div>
+                {errors.acceptTerms && (
+                  <div className="error-message">
+                    <small>{errors.acceptTerms}</small>
+                  </div>
+                )}
+              </div>
 
-                  {/* Lien vers connexion */}
-                  <IonText className="ion-text-center ion-margin-top">
-                    <p>
-                      Vous avez déjà un compte ? 
-                      <IonText color="primary" onClick={() => history.push('/login')} style={{ cursor: 'pointer', textDecoration: 'underline' }}>
-                        {' '}Se connecter
-                      </IonText>
-                    </p>
-                  </IonText>
-                </IonCardContent>
-              </IonCard>
+              {/* Bouton d'inscription */}
+              <button
+                onClick={handleRegister}
+                disabled={loading}
+                className="register-btn"
+              >
+                {loading ? (
+                  <>
+                    <IonSpinner name="crescent" />
+                    <span>Création du compte...</span>
+                  </>
+                ) : (
+                  <>
+                    <IonIcon icon={checkmarkCircleOutline} />
+                    <span>Créer mon compte</span>
+                  </>
+                )}
+              </button>
 
-            </IonCol>
-          </IonRow>
-        </IonGrid>
+              {/* Lien vers connexion */}
+              <div className="login-link">
+                <p>
+                  Vous avez déjà un compte ?{' '}
+                  <span onClick={() => history.push('/login')} className="link">
+                    Se connecter
+                  </span>
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
 
         {/* Alert de succès */}
         <IonAlert

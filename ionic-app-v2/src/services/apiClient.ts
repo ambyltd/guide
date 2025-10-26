@@ -1,4 +1,4 @@
-import { getApiBaseUrl, apiConfig, checkApiHealth } from '../config/apiConfig';
+import { getApiBaseUrl, checkApiHealth } from '../config/apiConfig';
 
 export interface ApiResponse<T> {
   data: T;
@@ -111,10 +111,16 @@ class ApiClient {
     return this.request<T>(url, requestInit);
   }
 
-  async delete<T>(url: string): Promise<ApiResponse<T>> {
-    return this.request<T>(url, {
+  async delete<T>(url: string, data?: unknown): Promise<ApiResponse<T>> {
+    const requestInit: RequestInit = {
       method: 'DELETE',
-    });
+    };
+    
+    if (data) {
+      requestInit.body = JSON.stringify(data);
+    }
+    
+    return this.request<T>(url, requestInit);
   }
 
   /**

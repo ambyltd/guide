@@ -3,14 +3,14 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
+import { useSelector } from 'react-redux';
 import { attractionsService } from '../services/paidAttractionsService';
 import type { PaidAttraction, DownloadRequest, PurchaseRequest } from '../types/attractions';
-
-// Mock pour la démo - à remplacer par le vrai store Redux
-const mockUser = { id: 'demo-user', displayName: 'Utilisateur démo' };
+import type { RootState } from '../store';
 
 export const usePaidAttractions = () => {
-  const user = mockUser; // Simulation pour la démo
+  // Récupérer l'utilisateur authentifié depuis Redux
+  const user = useSelector((state: RootState) => state.auth.user);
   
   const [attractions, setAttractions] = useState<PaidAttraction[]>([]);
   const [userPurchases, setUserPurchases] = useState<string[]>([]);

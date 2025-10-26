@@ -109,6 +109,11 @@ class AuthService {
 
         try {
           if (user) {
+            // Récupérer et sauvegarder le token Firebase à chaque changement d'état
+            const token = await user.getIdToken();
+            localStorage.setItem('authToken', token);
+            console.log('✅ Token Firebase actualisé dans localStorage');
+
             const profile = await this.loadUserProfile(user);
             this.currentState = {
               user,
@@ -117,6 +122,10 @@ class AuthService {
               error: null,
             };
           } else {
+            // Supprimer le token si déconnecté
+            localStorage.removeItem('authToken');
+            console.log('🗑️ Token Firebase supprimé de localStorage');
+
             this.currentState = {
               user: null,
               profile: null,
@@ -190,6 +199,11 @@ class AuthService {
 
       console.log('✅ Connexion Firebase réussie:', userCredential.user.uid);
 
+      // Récupérer et sauvegarder le token Firebase
+      const token = await userCredential.user.getIdToken();
+      localStorage.setItem('authToken', token);
+      console.log('✅ Token Firebase sauvegardé dans localStorage');
+
       await this.updateLastLogin(userCredential.user.uid);
       const profile = await this.loadUserProfile(userCredential.user);
 
@@ -250,6 +264,11 @@ class AuthService {
       provider.addScope('email');
 
       const userCredential = await signInWithPopup(auth, provider);
+
+      // Récupérer et sauvegarder le token Firebase
+      const token = await userCredential.user.getIdToken();
+      localStorage.setItem('authToken', token);
+      console.log('✅ Token Firebase sauvegardé dans localStorage (Google)');
       
       // Créer ou mettre à jour le profil
       let profile: UserProfile;
@@ -385,14 +404,24 @@ class AuthService {
       }
 
       const data = userDoc.data();
+      
+      // Convertir les timestamps Firestore en Date
+      const createdAt = data.createdAt?.toDate ? data.createdAt.toDate() : 
+                       data.createdAt instanceof Date ? data.createdAt : 
+                       new Date(data.createdAt || Date.now());
+      
+      const lastLoginAt = data.lastLoginAt?.toDate ? data.lastLoginAt.toDate() : 
+                         data.lastLoginAt instanceof Date ? data.lastLoginAt : 
+                         new Date(data.lastLoginAt || Date.now());
+      
       return {
         uid,
         email: data.email,
         displayName: data.displayName,
         photoURL: data.photoURL,
         emailVerified: data.emailVerified,
-        createdAt: data.createdAt?.toDate() || new Date(),
-        lastLoginAt: data.lastLoginAt?.toDate() || new Date(),
+        createdAt,
+        lastLoginAt,
         preferences: data.preferences,
       };
     } catch (error) {

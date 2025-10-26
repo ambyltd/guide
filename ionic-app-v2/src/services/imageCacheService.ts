@@ -99,14 +99,32 @@ class ImageCacheService {
    */
   private async ensureCacheDirectory(): Promise<void> {
     try {
-      await Filesystem.mkdir({
+      // Vérifier si le dossier existe déjà
+      await Filesystem.readdir({
         path: CACHE_DIR,
         directory: Directory.Data,
-        recursive: true,
       });
-    } catch (error) {
-      // Dossier existe déjà, ignorer l'erreur
       console.log('📁 Cache directory already exists');
+    } catch (error: any) {
+      // Dossier n'existe pas, le créer
+      if (error.code === 'NOT_FOUND' || error.message?.includes('does not exist')) {
+        try {
+          await Filesystem.mkdir({
+            path: CACHE_DIR,
+            directory: Directory.Data,
+            recursive: true,
+          });
+          console.log('✅ Cache directory created');
+        } catch (mkdirError: any) {
+          // Si erreur "already exists", ignorer
+          if (mkdirError.code !== 'OS-PLUG-FILE-0010') {
+            throw mkdirError;
+          }
+          console.log('📁 Cache directory already exists (mkdir)');
+        }
+      } else {
+        throw error;
+      }
     }
   }
 

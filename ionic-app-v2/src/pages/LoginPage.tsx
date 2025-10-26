@@ -31,7 +31,9 @@ import {
   eyeOffOutline,
   logoGoogle,
   personAddOutline,
-  bugOutline,
+  compassOutline,
+  earthOutline,
+  mapOutline,
 } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
@@ -59,7 +61,7 @@ const LoginPage: React.FC = () => {
   // ===== REDIRECTION SI CONNECTÉ =====
   useEffect(() => {
     if (isAuthenticated) {
-      history.replace('/home');
+      history.push('/tabs/home', { replace: true });
     }
   }, [isAuthenticated, history]);
 
@@ -154,162 +156,179 @@ const LoginPage: React.FC = () => {
   // ===== RENDU =====
   return (
     <IonPage>
-      <IonContent fullscreen>
+      <IonContent fullscreen className="login-page-content">
         <div className="login-container">
-          <IonGrid>
-            <IonRow className="ion-justify-content-center">
-              <IonCol size="12" sizeMd="8" sizeLg="6" sizeXl="4">
-                <IonCard className="login-card">
-                  <IonCardHeader>
-                    <div className="login-header">
-                      <div className="app-logo">
-                        <IonIcon 
-                          icon={mailOutline} 
-                          className="logo-icon"
-                        />
+          {/* Background decorative elements */}
+          <div className="login-bg-pattern">
+            <div className="floating-icon icon-1">
+              <IonIcon icon={compassOutline} />
+            </div>
+            <div className="floating-icon icon-2">
+              <IonIcon icon={earthOutline} />
+            </div>
+            <div className="floating-icon icon-3">
+              <IonIcon icon={mapOutline} />
+            </div>
+          </div>
+
+          <IonGrid className="login-grid">
+            <IonRow className="ion-justify-content-center ion-align-items-center">
+              <IonCol size="12" sizeMd="10" sizeLg="8" sizeXl="6">
+                <div className="login-wrapper">
+                  {/* Left side - Branding */}
+                  <div className="login-branding">
+                    <div className="brand-content">
+                      <div className="brand-logo-container">
+                        <div className="brand-logo">
+                          <IonIcon icon={compassOutline} />
+                        </div>
+                        <div className="brand-glow"></div>
                       </div>
-                      <IonCardTitle className="login-title">
-                        Côte d'Ivoire Audio Guide
-                      </IonCardTitle>
-                      <IonText color="medium" className="login-subtitle">
-                        Connectez-vous pour découvrir les merveilles de la Côte d'Ivoire
-                      </IonText>
+                      <h1 className="brand-title">Côte d'Ivoire</h1>
+                      <h2 className="brand-subtitle">Audio Guide</h2>
+                      <p className="brand-description">
+                        Découvrez les merveilles de la Côte d'Ivoire à travers des guides audio immersifs
+                      </p>
+                      <div className="brand-stats">
+                        <div className="stat-item">
+                          <div className="stat-number">50+</div>
+                          <div className="stat-label">Attractions</div>
+                        </div>
+                        <div className="stat-item">
+                          <div className="stat-number">15+</div>
+                          <div className="stat-label">Circuits</div>
+                        </div>
+                        <div className="stat-item">
+                          <div className="stat-number">2</div>
+                          <div className="stat-label">Langues</div>
+                        </div>
+                      </div>
                     </div>
-                  </IonCardHeader>
+                  </div>
 
-                  <IonCardContent>
-                    <form onSubmit={handleSubmit} className="login-form">
-                      {/* Email */}
-                      <IonItem 
-                        className={`login-input ${validationErrors.email ? 'ion-invalid' : ''}`}
-                      >
-                        <IonIcon icon={mailOutline} slot="start" />
-                        <IonLabel position="stacked">Email</IonLabel>
-                        <IonInput
-                          type="email"
-                          value={formData.email}
-                          onIonInput={(e) => handleInputChange('email', e.detail.value!)}
-                          placeholder="votre@email.com"
-                          required
-                        />
-                      </IonItem>
-                      {validationErrors.email && (
-                        <IonText color="danger" className="error-text">
-                          {validationErrors.email}
-                        </IonText>
-                      )}
-
-                      {/* Mot de passe */}
-                      <IonItem 
-                        className={`login-input ${validationErrors.password ? 'ion-invalid' : ''}`}
-                      >
-                        <IonIcon icon={lockClosedOutline} slot="start" />
-                        <IonLabel position="stacked">Mot de passe</IonLabel>
-                        <IonInput
-                          type={showPassword ? 'text' : 'password'}
-                          value={formData.password}
-                          onIonInput={(e) => handleInputChange('password', e.detail.value!)}
-                          placeholder="••••••••"
-                          required
-                        />
-                        <IonButton
-                          fill="clear"
-                          slot="end"
-                          onClick={() => setShowPassword(!showPassword)}
-                          className="password-toggle"
-                        >
-                          <IonIcon icon={showPassword ? eyeOffOutline : eyeOutline} />
-                        </IonButton>
-                      </IonItem>
-                      {validationErrors.password && (
-                        <IonText color="danger" className="error-text">
-                          {validationErrors.password}
-                        </IonText>
-                      )}
-
-                      {/* Options */}
-                      <div className="login-options">
-                        <IonItem lines="none">
-                          <IonCheckbox
-                            checked={rememberMe}
-                            onIonChange={(e) => setRememberMe(e.detail.checked)}
-                          />
-                          <IonLabel className="ion-margin-start">
-                            Se souvenir de moi
-                          </IonLabel>
-                        </IonItem>
-
-                        <IonButton 
-                          fill="clear" 
-                          size="small"
-                          onClick={navigateToForgotPassword}
-                          className="forgot-password-link"
-                        >
-                          Mot de passe oublié ?
-                        </IonButton>
+                  {/* Right side - Login Form */}
+                  <div className="login-form-container">
+                    <div className="login-form-inner">
+                      <div className="login-header">
+                        <h3 className="login-welcome">Bon retour !</h3>
+                        <p className="login-subtitle">Connectez-vous pour continuer votre exploration</p>
                       </div>
 
-                      {/* Bouton de connexion */}
-                      <IonButton
-                        expand="block"
-                        type="submit"
-                        disabled={isSubmitting || loading}
-                        className="login-button"
-                      >
-                        {isSubmitting ? 'Connexion...' : 'Se connecter'}
-                      </IonButton>
+                      <form onSubmit={handleSubmit} className="login-form">
+                        {/* Email */}
+                        <div className="input-group">
+                          <label className="input-label">Adresse email</label>
+                          <div className={`input-wrapper ${validationErrors.email ? 'has-error' : ''}`}>
+                            <IonIcon icon={mailOutline} className="input-icon" />
+                            <input
+                              type="email"
+                              value={formData.email}
+                              onChange={(e) => handleInputChange('email', e.target.value)}
+                              placeholder="votre@email.com"
+                              className="custom-input"
+                              required
+                            />
+                          </div>
+                          {validationErrors.email && (
+                            <span className="error-message">{validationErrors.email}</span>
+                          )}
+                        </div>
 
-                      {/* Divider */}
-                      <div className="divider">
-                        <span>ou</span>
-                      </div>
+                        {/* Password */}
+                        <div className="input-group">
+                          <label className="input-label">Mot de passe</label>
+                          <div className={`input-wrapper ${validationErrors.password ? 'has-error' : ''}`}>
+                            <IonIcon icon={lockClosedOutline} className="input-icon" />
+                            <input
+                              type={showPassword ? 'text' : 'password'}
+                              value={formData.password}
+                              onChange={(e) => handleInputChange('password', e.target.value)}
+                              placeholder="••••••••"
+                              className="custom-input"
+                              required
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowPassword(!showPassword)}
+                              className="password-toggle-btn"
+                            >
+                              <IonIcon icon={showPassword ? eyeOffOutline : eyeOutline} />
+                            </button>
+                          </div>
+                          {validationErrors.password && (
+                            <span className="error-message">{validationErrors.password}</span>
+                          )}
+                        </div>
 
-                      {/* Connexion Google */}
-                      <IonButton
-                        expand="block"
-                        fill="outline"
-                        onClick={handleGoogleSignIn}
-                        disabled={isSubmitting || loading}
-                        className="google-button"
-                      >
-                        <IonIcon icon={logoGoogle} slot="start" />
-                        Continuer avec Google
-                      </IonButton>
+                        {/* Remember & Forgot */}
+                        <div className="form-options">
+                          <label className="checkbox-label">
+                            <input
+                              type="checkbox"
+                              checked={rememberMe}
+                              onChange={(e) => setRememberMe(e.target.checked)}
+                              className="custom-checkbox"
+                            />
+                            <span>Se souvenir de moi</span>
+                          </label>
+                          <button
+                            type="button"
+                            onClick={navigateToForgotPassword}
+                            className="forgot-link"
+                          >
+                            Mot de passe oublié ?
+                          </button>
+                        </div>
 
-                      {/* Lien vers l'inscription */}
-                      <div className="register-link">
-                        <IonText color="medium">
-                          Pas encore de compte ?{' '}
-                          <IonButton 
-                            fill="clear" 
-                            size="small"
+                        {/* Submit Button */}
+                        <button
+                          type="submit"
+                          disabled={isSubmitting || loading}
+                          className="submit-btn"
+                        >
+                          {isSubmitting ? (
+                            <>
+                              <span className="spinner"></span>
+                              Connexion en cours...
+                            </>
+                          ) : (
+                            'Se connecter'
+                          )}
+                        </button>
+
+                        {/* Divider */}
+                        <div className="divider-wrapper">
+                          <div className="divider-line"></div>
+                          <span className="divider-text">ou continuer avec</span>
+                          <div className="divider-line"></div>
+                        </div>
+
+                        {/* Google Button */}
+                        <button
+                          type="button"
+                          onClick={handleGoogleSignIn}
+                          disabled={isSubmitting || loading}
+                          className="google-btn"
+                        >
+                          <IonIcon icon={logoGoogle} className="google-icon" />
+                          Google
+                        </button>
+
+                        {/* Register Link */}
+                        <div className="register-link">
+                          <span>Pas encore de compte ?</span>
+                          <button
+                            type="button"
                             onClick={navigateToRegister}
-                            className="register-button"
+                            className="register-btn"
                           >
-                            <IonIcon icon={personAddOutline} slot="start" />
-                            S'inscrire
-                          </IonButton>
-                        </IonText>
-                      </div>
-
-                      {/* Lien vers le diagnostic (pour le débogage) */}
-                      <div className="diagnostic-link">
-                        <IonText color="medium">
-                          Problème de connexion ?{' '}
-                          <IonButton 
-                            fill="clear" 
-                            size="small"
-                            routerLink="/diagnostic"
-                            className="diagnostic-button"
-                          >
-                            <IonIcon icon={bugOutline} slot="start" />
-                            Diagnostic
-                          </IonButton>
-                        </IonText>
-                      </div>
-                    </form>
-                  </IonCardContent>
-                </IonCard>
+                            Créer un compte
+                          </button>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                </div>
               </IonCol>
             </IonRow>
           </IonGrid>

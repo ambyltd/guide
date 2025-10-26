@@ -19,7 +19,8 @@
   max-width: 500px;
 }
 
-.hero-content h1 {
+.hero-content h1,
+.hero-content h2 {
   font-size: 2rem;
   font-weight: bold;
   margin-bottom: 10px;
@@ -238,6 +239,29 @@ ion-card-subtitle {
   .attraction-actions ion-button {
     flex: 1;
   }
+}
+
+/* Scroll horizontal pour sections */
+.attractions-section > div:last-child,
+.tours-section > div:last-child {
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: var(--ion-color-primary) transparent;
+}
+
+.attractions-section > div:last-child::-webkit-scrollbar,
+.tours-section > div:last-child::-webkit-scrollbar {
+  height: 6px;
+}
+
+.attractions-section > div:last-child::-webkit-scrollbar-thumb {
+  background-color: var(--ion-color-primary);
+  border-radius: 3px;
+}
+
+.tours-section > div:last-child::-webkit-scrollbar-thumb {
+  background-color: var(--ion-color-secondary);
+  border-radius: 3px;
 }
 
 /* Mode sombre */

@@ -440,19 +440,28 @@ class GeolocationService {
       const response = await fetch(`${import.meta.env.VITE_API_URL}/attractions`);
       
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        console.warn(`⚠️ API error ${response.status}, using empty geofence regions`);
+        this.geofenceRegions = [];
+        return;
       }
       
       const data: unknown = await response.json();
       
       // La réponse peut être un objet avec une propriété 'data' ou directement un tableau
-      const attractions: BackendAttractionData[] = Array.isArray(data) 
-        ? data as BackendAttractionData[]
-        : ((data as { data?: unknown }).data || (data as { attractions?: unknown }).attractions || []) as BackendAttractionData[];
+      let attractions: BackendAttractionData[] = [];
+      
+      if (Array.isArray(data)) {
+        attractions = data as BackendAttractionData[];
+      } else if (typeof data === 'object' && data !== null) {
+        // Essayer différentes propriétés possibles
+        const dataObj = data as Record<string, unknown>;
+        attractions = (dataObj.data || dataObj.attractions || dataObj.results || []) as BackendAttractionData[];
+      }
       
       if (!Array.isArray(attractions)) {
-        console.warn('⚠️ Response is not an array:', data);
-        throw new Error('Invalid response format: expected array of attractions');
+        console.warn('⚠️ Response is not an array, using empty geofence regions:', data);
+        this.geofenceRegions = [];
+        return;
       }
       
       console.log(`📍 Loaded ${attractions.length} attractions for geofencing`);
@@ -489,8 +498,10 @@ class GeolocationService {
       console.log(`✅ ${this.geofenceRegions.length} zones de geofencing chargées depuis le backend`);
       
     } catch (error) {
-      console.warn('⚠️ Failed to sync geofence regions from backend:', error);
-      // Fallback: utiliser les données mockées si le backend n'est pas disponible
+      console.error('❌ Failed to sync geofence regions from backend:', error);
+      // En production, pas de fallback - afficher une erreur claire
+      this.geofenceRegions = [];
+      throw new Error('Impossible de charger les zones de geofencing. Vérifiez votre connexion internet.');
     }
   }
 
