@@ -35,7 +35,6 @@ class FavoritesService {
   initialize(userId: string, userName: string = 'User') {
     this.userId = userId;
     this.userName = userName;
-    console.log('[FavoritesService] Initialized for user:', userId);
   }
 
   /**
@@ -43,9 +42,7 @@ class FavoritesService {
    */
   private getUserId(): string {
     if (!this.userId) {
-      // Fallback: générer un ID temporaire si pas encore initialisé
-      this.userId = `user-${Date.now()}`;
-      this.userName = 'Guest User';
+      throw new Error('FavoritesService non initialisé. Veuillez vous connecter.');
     }
     return this.userId;
   }
@@ -55,16 +52,15 @@ class FavoritesService {
    */
   async addFavorite(attractionId: string): Promise<Favorite> {
     try {
-      console.log('[FavoritesService] Adding favorite:', attractionId);
-
+      const userId = this.getUserId();
+      
       const response = await apiClient.post<Favorite>('/api/favorites', {
-        userId: this.getUserId(),
+        userId,
         userName: this.userName || 'User',
         attractionId,
       });
 
       if (response.success) {
-        console.log('[FavoritesService] Favorite added successfully');
         return response.data;
       } else {
         throw new Error(response.message || 'Erreur lors de l\'ajout du favori');
@@ -80,14 +76,15 @@ class FavoritesService {
    */
   async removeFavorite(attractionId: string): Promise<void> {
     try {
-      console.log('[FavoritesService] Removing favorite:', attractionId);
-
+      const userId = this.getUserId();
+      
       const response = await apiClient.delete<{ message: string }>(
-        `/api/favorites/${attractionId}`
+        `/api/favorites/${attractionId}`,
+        { userId }
       );
 
       if (response.success) {
-        console.log('[FavoritesService] Favorite removed successfully');
+        return;
       } else {
         throw new Error(response.message || 'Erreur lors de la suppression du favori');
       }
@@ -102,21 +99,23 @@ class FavoritesService {
    */
   async getUserFavorites(): Promise<Favorite[]> {
     try {
-      console.log('[FavoritesService] Fetching user favorites');
+      const userId = this.getUserId();
+      if (!userId) {
+        console.warn('[FavoritesService] No userId, returning empty favorites');
+        return [];
+      }
 
-      const response = await apiClient.get<Favorite[]>('/api/favorites', {
-        userId: this.getUserId(),
-      });
+      const response = await apiClient.get<Favorite[]>(`/api/favorites?userId=${userId}`);
 
       if (response.success) {
-        console.log('[FavoritesService] Favorites fetched:', response.data.length);
         return response.data;
       } else {
         throw new Error(response.message || 'Erreur lors de la récupération des favoris');
       }
     } catch (error) {
       console.error('[FavoritesService] Error fetching favorites:', error);
-      throw error;
+      // Retourner un tableau vide au lieu de throw pour ne pas bloquer l'app
+      return [];
     }
   }
 
@@ -125,18 +124,28 @@ class FavoritesService {
    */
   async isFavorite(attractionId: string): Promise<boolean> {
     try {
-      const response = await apiClient.get<{ isFavorite: boolean }>(
-        `/api/favorites/check/${attractionId}`,
-        {
-          userId: this.getUserId(),
-        }
-      );
-
-      if (response.success) {
-        return response.data.isFavorite;
-      } else {
+      const userId = this.getUserId();
+      if (!userId) {
+        console.warn('[FavoritesService] No userId, favorite check returns false');
         return false;
       }
+
+      const response = await apiClient.get<{ isFavorite: boolean }>(
+        `/api/favorites/check/${attractionId}?userId=${userId}`
+      );
+
+      // Gérer les deux formats de réponse (local et prod)
+      if (response.success) {
+        // Format standard: { success: true, data: { isFavorite: boolean } }
+        if (response.data && typeof response.data === 'object' && 'isFavorite' in response.data) {
+          return response.data.isFavorite;
+        }
+        // Format prod: { success: true, isFavorite: boolean }
+        if ('isFavorite' in response) {
+          return (response as { success: boolean; isFavorite: boolean }).isFavorite;
+        }
+      }
+      return false;
     } catch (error) {
       console.error('[FavoritesService] Error checking favorite:', error);
       return false;

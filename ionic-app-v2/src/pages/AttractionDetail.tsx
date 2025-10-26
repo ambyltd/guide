@@ -59,9 +59,10 @@ import {
   thumbsUpOutline,
   flagOutline,
 } from 'ionicons/icons';
-import { useParams, useHistory } from 'react-router-dom';
+import { useParams, useHistory, useLocation } from 'react-router-dom';
 import axios from 'axios';
-import mapboxgl from 'mapbox-gl';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import L from 'leaflet';
 import type { BackendAttraction, BackendAudioGuide } from '../types/backend';
 import AudioPlayer from '../components/AudioPlayer';
 import MapWithGeofencing from '../components/MapWithGeofencing';
@@ -74,11 +75,16 @@ import { userStatsService } from '../services/userStatsService';
 import { moderationService } from '../services/moderationService';
 import { socialShareService } from '../services/socialShareService';
 import { useAuth } from '../hooks/useAuth';
-import 'mapbox-gl/dist/mapbox-gl.css';
+import 'leaflet/dist/leaflet.css';
 import './AttractionDetail.css';
 
-// Configuration Mapbox
-mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN || '';
+// Fix pour les icônes Leaflet
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+});
 
 // Import du type Review depuis le service
 import type { Review } from '../services/reviewsService';
@@ -86,6 +92,7 @@ import type { Review } from '../services/reviewsService';
 const AttractionDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const history = useHistory();
+  const location = useLocation();
   const isMountedRef = useRef(true);
   const [attraction, setAttraction] = useState<BackendAttraction | null>(null);
   const [audioGuides, setAudioGuides] = useState<BackendAudioGuide[]>([]);
@@ -95,8 +102,7 @@ const AttractionDetailPage: React.FC = () => {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [selectedAudioGuide, setSelectedAudioGuide] = useState<BackendAudioGuide | null>(null);
   const [isPlayerOpen, setIsPlayerOpen] = useState(false);
-  const mapContainerRef = React.useRef<HTMLDivElement>(null);
-  const mapRef = React.useRef<mapboxgl.Map | null>(null);
+  // Pas besoin de mapRef avec Leaflet (géré par MapContainer)
   
   // 🎵 États pour le cache audio
   const [downloadProgress, setDownloadProgress] = useState<{ [key: string]: number }>({});
@@ -173,6 +179,34 @@ const AttractionDetailPage: React.FC = () => {
     }
   }, []);
 
+  // 🎵 Auto-play depuis QR Code Scanner
+  useEffect(() => {
+    if (!audioGuides.length || !isMountedRef.current) return;
+
+    // Parser les query params (format: ?autoplay=true&language=fr)
+    const searchParams = new URLSearchParams(location.search);
+    const autoplay = searchParams.get('autoplay') === 'true';
+    const preferredLang = searchParams.get('language') || 'fr';
+
+    if (autoplay) {
+      console.log('🎵 QR Code Auto-play détecté:', { preferredLang, audioGuides: audioGuides.length });
+
+      // Sélectionner l'audioguide selon la langue préférée
+      const audioGuide = audioGuides.find(ag => ag.language === preferredLang) || audioGuides[0];
+
+      if (audioGuide) {
+        console.log('▶️ Ouverture AudioPlayer automatique:', audioGuide.title);
+        setSelectedAudioGuide(audioGuide);
+        setIsPlayerOpen(true);
+        setSelectedTab('audioguides'); // Switcher vers l'onglet audioguides
+
+        // Nettoyer les query params pour éviter re-trigger au retour
+        const newUrl = `${location.pathname}`;
+        history.replace(newUrl);
+      }
+    }
+  }, [audioGuides, location.search, history, location.pathname]);
+
   const loadAttraction = async () => {
     try {
       if (!isMountedRef.current) return;
@@ -212,7 +246,6 @@ const AttractionDetailPage: React.FC = () => {
     // Protection: Ne pas appeler l'API si l'utilisateur n'est pas connecté OU si le token n'est pas prêt
     const authToken = localStorage.getItem('authToken');
     if (!user?.uid || !authToken) {
-      console.log('⚠️ Utilisateur non connecté ou token absent, skip checkFavorite API');
       // Fallback localStorage pour utilisateurs non connectés
       const savedFavorites = localStorage.getItem('favorites');
       if (savedFavorites) {
@@ -226,9 +259,8 @@ const AttractionDetailPage: React.FC = () => {
       const isFav = await favoritesService.isFavorite(id);
       if (!isMountedRef.current) return;
       setIsFavorite(isFav);
-      console.log('✅ Statut favori chargé:', isFav);
     } catch (error) {
-      console.error('❌ Erreur vérification favori, fallback localStorage:', error);
+      console.error('Erreur vérification favori, fallback localStorage:', error);
       const savedFavorites = localStorage.getItem('favorites');
       if (savedFavorites) {
         const favorites = new Set(JSON.parse(savedFavorites));
@@ -296,41 +328,9 @@ const AttractionDetailPage: React.FC = () => {
     }
   };
 
-  // Initialiser la map preview
-  useEffect(() => {
-    if (!attraction || !attraction.location?.coordinates || !mapContainerRef.current || mapRef.current) {
-      return;
-    }
+  // SUPPRIMÉ: Initialisation de la carte Mapbox (remplacée par MapContainer Leaflet dans le JSX)
 
-    const [lng, lat] = attraction.location.coordinates;
-
-    // Créer la map preview
-    mapRef.current = new mapboxgl.Map({
-      container: mapContainerRef.current,
-      style: 'mapbox://styles/mapbox/streets-v12',
-      center: [lng, lat],
-      zoom: 14,
-      interactive: false, // Désactiver les interactions (preview seulement)
-    });
-
-    // Ajouter un marker
-    new mapboxgl.Marker({ color: '#3880ff' })
-      .setLngLat([lng, lat])
-      .setPopup(
-        new mapboxgl.Popup({ offset: 25 }).setHTML(
-          `<h3>${attraction.name}</h3><p>${attraction.city}</p>`
-        )
-      )
-      .addTo(mapRef.current);
-
-    // Cleanup
-    return () => {
-      mapRef.current?.remove();
-      mapRef.current = null;
-    };
-  }, [attraction]);
-
-  // Toggle favori
+  // Toggle favori (Bouton visible uniquement si user connecté)
   const toggleFavorite = async () => {
     const previousState = isFavorite;
     try {
@@ -618,15 +618,18 @@ const AttractionDetailPage: React.FC = () => {
       <IonHeader>
         <IonToolbar>
           <IonButtons slot="start">
-            <IonBackButton defaultHref="/tabs/home" />
+            <IonBackButton />
           </IonButtons>
           <IonButtons slot="end">
-            <IonButton onClick={toggleFavorite}>
-              <IonIcon
-                icon={isFavorite ? heart : heartOutline}
-                {...(isFavorite && { color: 'danger' })}
-              />
-            </IonButton>
+            {/* Bouton favori - Visible uniquement si connecté */}
+            {user && (
+              <IonButton onClick={toggleFavorite}>
+                <IonIcon
+                  icon={isFavorite ? heart : heartOutline}
+                  {...(isFavorite && { color: 'danger' })}
+                />
+              </IonButton>
+            )}
             <IonButton onClick={handleShare}>
               <IonIcon icon={shareOutline} />
             </IonButton>
@@ -886,55 +889,67 @@ const AttractionDetailPage: React.FC = () => {
         {/* Contenu - Avis */}
         {selectedTab === 'reviews' && (
           <div className="tab-content">
-            {/* Formulaire création avis */}
-            <IonCard>
-              <IonCardHeader>
-                <IonCardTitle>Donner votre avis</IonCardTitle>
-              </IonCardHeader>
-              <IonCardContent>
-                {/* Notation étoiles */}
-                <div style={{ marginBottom: '15px' }}>
-                  <IonText>
-                    <p style={{ marginBottom: '10px', fontWeight: 'bold' }}>Note : {newReviewRating}/5</p>
-                  </IonText>
-                  <div style={{ display: 'flex', gap: '5px' }}>
-                    {[1, 2, 3, 4, 5].map((starNum) => (
-                      <IonIcon
-                        key={starNum}
-                        icon={starNum <= newReviewRating ? star : starOutline}
-                        style={{ fontSize: '32px', color: '#ffc409', cursor: 'pointer' }}
-                        onClick={() => setNewReviewRating(starNum)}
-                      />
-                    ))}
+            {/* Formulaire création avis (visible uniquement si user connecté) */}
+            {user ? (
+              <IonCard>
+                <IonCardHeader>
+                  <IonCardTitle>Donner votre avis</IonCardTitle>
+                </IonCardHeader>
+                <IonCardContent>
+                  {/* Notation étoiles */}
+                  <div style={{ marginBottom: '15px' }}>
+                    <IonText>
+                      <p style={{ marginBottom: '10px', fontWeight: 'bold' }}>Note : {newReviewRating}/5</p>
+                    </IonText>
+                    <div style={{ display: 'flex', gap: '5px' }}>
+                      {[1, 2, 3, 4, 5].map((starNum) => (
+                        <IonIcon
+                          key={starNum}
+                          icon={starNum <= newReviewRating ? star : starOutline}
+                          style={{ fontSize: '32px', color: '#ffc409', cursor: 'pointer' }}
+                          onClick={() => setNewReviewRating(starNum)}
+                        />
+                      ))}
+                    </div>
                   </div>
-                </div>
 
-                {/* Commentaire */}
-                <IonTextarea
-                  placeholder="Partagez votre expérience (minimum 10 caractères)..."
-                  value={newReviewComment}
-                  onIonInput={(e) => setNewReviewComment(e.detail.value || '')}
-                  rows={4}
-                  maxlength={1000}
-                  style={{ border: '1px solid #ddd', borderRadius: '8px', padding: '10px' }}
-                />
-                <IonText color="medium">
-                  <p style={{ fontSize: '12px', marginTop: '5px' }}>
-                    {newReviewComment.length}/1000 caractères
-                  </p>
-                </IonText>
+                  {/* Commentaire */}
+                  <IonTextarea
+                    placeholder="Partagez votre expérience (minimum 10 caractères)..."
+                    value={newReviewComment}
+                    onIonInput={(e) => setNewReviewComment(e.detail.value || '')}
+                    rows={4}
+                    maxlength={1000}
+                    style={{ border: '1px solid #ddd', borderRadius: '8px', padding: '10px' }}
+                  />
+                  <IonText color="medium">
+                    <p style={{ fontSize: '12px', marginTop: '5px' }}>
+                      {newReviewComment.length}/1000 caractères
+                    </p>
+                  </IonText>
 
-                {/* Bouton soumettre */}
-                <IonButton
-                  expand="block"
-                  onClick={handleSubmitReview}
-                  disabled={isSubmittingReview || newReviewComment.length < 10}
-                  style={{ marginTop: '15px' }}
-                >
-                  {isSubmittingReview ? 'Publication...' : 'Publier mon avis'}
-                </IonButton>
-              </IonCardContent>
-            </IonCard>
+                  {/* Bouton soumettre */}
+                  <IonButton
+                    expand="block"
+                    onClick={handleSubmitReview}
+                    disabled={isSubmittingReview || newReviewComment.length < 10}
+                    style={{ marginTop: '15px' }}
+                  >
+                    {isSubmittingReview ? 'Publication...' : 'Publier mon avis'}
+                  </IonButton>
+                </IonCardContent>
+              </IonCard>
+            ) : (
+              <IonCard>
+                <IonCardHeader>
+                  <IonCardTitle>Donner votre avis</IonCardTitle>
+                </IonCardHeader>
+                <IonCardContent>
+                  <p>Connectez-vous pour laisser un avis.</p>
+                  <IonButton expand="block" onClick={() => history.push('/login')}>Se connecter</IonButton>
+                </IonCardContent>
+              </IonCard>
+            )}
 
             {/* Liste des avis */}
             {reviewsLoading ? (
