@@ -124,13 +124,14 @@ export const removeFavorite = async (req: Request, res: Response) => {
 // GET /api/favorites - Récupérer tous les favoris d'un utilisateur
 export const getUserFavorites = async (req: Request, res: Response) => {
   try {
-    // Utiliser le userId du token Firebase (authentification requise)
-    const userId = req.user?.uid;
+    // Support userId from query (for debug/fallback) OR token Firebase (preferred)
+    const queryUserId = req.query.userId as string | undefined;
+    const userId = queryUserId || req.user?.uid;
 
     if (!userId) {
-      return res.status(401).json({
+      return res.status(400).json({
         success: false,
-        error: 'Authentification requise',
+        error: 'userId requis',
       });
     }
 

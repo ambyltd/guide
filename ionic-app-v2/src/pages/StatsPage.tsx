@@ -9,7 +9,7 @@
  * - Leaderboard
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   IonPage,
   IonHeader,
@@ -53,9 +53,11 @@ import {
   type Achievement,
   type ComparisonData,
 } from '../services/advancedStatsService';
+import { useAuth } from '../hooks/useAuth';
 import './StatsPage.css';
 
 const StatsPage: React.FC = () => {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<'trends' | 'achievements' | 'compare'>('trends');
   const [timeframe, setTimeframe] = useState<'7d' | '30d'>('30d');
   const [loading, setLoading] = useState<boolean>(true);
@@ -65,11 +67,14 @@ const StatsPage: React.FC = () => {
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [comparison, setComparison] = useState<ComparisonData | null>(null);
 
+  // Initialize service with userId
   useEffect(() => {
-    loadData();
-  }, [activeTab, timeframe]);
+    if (user?.uid) {
+      advancedStatsService.initialize(user.uid);
+    }
+  }, [user]);
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     setLoading(true);
     try {
       if (activeTab === 'trends') {
@@ -87,7 +92,13 @@ const StatsPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [activeTab, timeframe]);
+
+  useEffect(() => {
+    if (user?.uid) {
+      loadData();
+    }
+  }, [user, loadData]);
 
   const handleRefresh = async (event: CustomEvent<RefresherEventDetail>) => {
     await loadData();
