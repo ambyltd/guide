@@ -46,6 +46,7 @@ import { useHistory } from 'react-router-dom';
 import axios from 'axios';
 import SearchFilters, { SearchFiltersState } from '../components/SearchFilters';
 import QRCodeScanner from '../components/QRCodeScanner';
+import ProfileMenu from '../components/ProfileMenu';
 import { imageCacheService } from '../services/imageCacheService';
 import { backgroundSyncService } from '../services/backgroundSyncService';
 import { favoritesService } from '../services/favoritesService';
@@ -485,6 +486,7 @@ const HomePage: React.FC = () => {
               padding: '8px 16px'
             }}
           />
+          <ProfileMenu slot="end" />
         </IonToolbar>
       </IonHeader>
 

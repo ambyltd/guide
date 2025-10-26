@@ -40,6 +40,7 @@ import {
   type LeaderboardEntry,
   type LeaderboardResponse,
 } from '../services/advancedStatsService';
+import ProfileMenu from '../components/ProfileMenu';
 import './LeaderboardPage.css';
 
 const LeaderboardPage: React.FC = () => {
@@ -174,6 +175,9 @@ const LeaderboardPage: React.FC = () => {
             <IonBackButton defaultHref="/profile" />
           </IonButtons>
           <IonTitle>Classement</IonTitle>
+          <IonButtons slot="end">
+            <ProfileMenu />
+          </IonButtons>
         </IonToolbar>
       </IonHeader>
 

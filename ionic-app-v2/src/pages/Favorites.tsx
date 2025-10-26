@@ -8,6 +8,7 @@ import {
   IonPage,
   IonHeader,
   IonToolbar,
+  IonButtons,
   IonContent,
   IonCard,
   IonCardHeader,
@@ -44,6 +45,7 @@ import { favoritesService } from '../services/favoritesService';
 import { userStatsService } from '../services/userStatsService';
 import { apiClient } from '../services/apiClient';
 import { useAuth } from '../hooks/useAuth';
+import ProfileMenu from '../components/ProfileMenu';
 import './Favorites.css';
 
 const FavoritesPage: React.FC = () => {
@@ -244,6 +246,9 @@ const FavoritesPage: React.FC = () => {
     <IonPage>
       <IonHeader>
         <IonToolbar>
+          <IonButtons slot="end">
+            <ProfileMenu />
+          </IonButtons>
         </IonToolbar>
       </IonHeader>
 

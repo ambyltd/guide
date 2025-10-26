@@ -41,6 +41,7 @@ import { audioCacheService } from '../services/audioCacheService';
 import { backgroundSyncService } from '../services/backgroundSyncService';
 import { userStatsService } from '../services/userStatsService';
 import { useAuth } from '../hooks/useAuth';
+import ProfileMenu from '../components/ProfileMenu';
 import './Profile.css';
 
 interface User {
@@ -203,6 +204,9 @@ const ProfilePage: React.FC = () => {
                 <IonIcon icon={compassOutline} className="profile-logo-icon" />
               </IonAvatar>
             </div>
+            <div slot="end">
+              <ProfileMenu />
+            </div>
           </IonToolbar>
         </IonHeader>
         <IonContent fullscreen>
@@ -228,6 +232,9 @@ const ProfilePage: React.FC = () => {
             <IonAvatar className="profile-logo">
               <IonIcon icon={compassOutline} className="profile-logo-icon" />
             </IonAvatar>
+          </div>
+          <div slot="end">
+            <ProfileMenu />
           </div>
         </IonToolbar>
       </IonHeader>

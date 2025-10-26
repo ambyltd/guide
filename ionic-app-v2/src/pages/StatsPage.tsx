@@ -54,6 +54,7 @@ import {
   type ComparisonData,
 } from '../services/advancedStatsService';
 import { useAuth } from '../hooks/useAuth';
+import ProfileMenu from '../components/ProfileMenu';
 import './StatsPage.css';
 
 const StatsPage: React.FC = () => {
@@ -348,6 +349,9 @@ const StatsPage: React.FC = () => {
             <IonBackButton defaultHref="/profile" />
           </IonButtons>
           <IonTitle>Statistiques</IonTitle>
+          <IonButtons slot="end">
+            <ProfileMenu />
+          </IonButtons>
         </IonToolbar>
       </IonHeader>
 

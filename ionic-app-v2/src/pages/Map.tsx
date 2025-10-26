@@ -40,6 +40,7 @@ import axios from 'axios';
 import type { BackendAttraction } from '../types/backend';
 import SearchFilters, { SearchFiltersState } from '../components/SearchFilters';
 import QRCodeScanner from '../components/QRCodeScanner';
+import ProfileMenu from '../components/ProfileMenu';
 import { useGeofencing } from '../hooks/useGeofencing';
 import './Map.css';
 
@@ -474,6 +475,7 @@ const MapPage: React.FC = () => {
                 )}
               </IonButton>
             )}
+            <ProfileMenu />
           </IonButtons>
         </IonToolbar>
       </IonHeader>

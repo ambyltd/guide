@@ -12,8 +12,7 @@ import {
 import { IonReactRouter } from '@ionic/react-router';
 import { Provider } from 'react-redux';
 import { store } from './store';
-import { homeOutline, mapOutline, heartOutline, personOutline } from 'ionicons/icons';
-import { useAuth } from './hooks/useAuth';
+import { homeOutline, mapOutline, playCircleOutline } from 'ionicons/icons';
 
 /* Pages Sprint 1 - MVP */
 import Home from './pages/Home';
@@ -21,6 +20,7 @@ import AttractionDetail from './pages/AttractionDetail';
 import Map from './pages/Map';
 import Profile from './pages/Profile';
 import Favorites from './pages/Favorites';
+import AudioGuidesPage from './pages/AudioGuides';
 
 /* Pages d'authentification */
 import LoginPage from './pages/LoginPage';
@@ -33,6 +33,9 @@ import PaidReservationsPage from './pages/PaidReservationsPage';
 /* Pages Sprint 4 - Statistiques Avancées */
 import StatsPage from './pages/StatsPage';
 import LeaderboardPage from './pages/LeaderboardPage';
+
+/* Pages Paramètres */
+import SettingsPage from './pages/SettingsPage';
 
 /* Components */
 import { GuestOnly } from './components/ProtectedRoute';
@@ -73,13 +76,12 @@ import './theme/minimal.css';
 setupIonicReact();
 
 const TabsNavigation: React.FC = () => {
-  const { isAuthenticated } = useAuth();
-
   return (
     <IonTabs>
       <IonRouterOutlet>
         <Route exact path="/tabs/home" component={Home} />
         <Route exact path="/tabs/map" component={Map} />
+        <Route exact path="/tabs/audioguides" component={AudioGuidesPage} />
         <Route exact path="/tabs/favorites" component={Favorites} />
         <Route exact path="/tabs/profile" component={Profile} />
         <Route exact path="/tabs/attraction/:id" component={AttractionDetail} />
@@ -97,7 +99,11 @@ const TabsNavigation: React.FC = () => {
           <IonIcon aria-hidden="true" icon={mapOutline} />
           <IonLabel>Carte</IonLabel>
         </IonTabButton>
-        {/* Tab Favoris : uniquement pour utilisateurs authentifiés */}
+        <IonTabButton tab="audioguides" href="/tabs/audioguides">
+          <IonIcon aria-hidden="true" icon={playCircleOutline} />
+          <IonLabel>Guides</IonLabel>
+        </IonTabButton>
+        {/* RETIRÉS: Favorites et Profile déplacés dans ProfileMenu header
         {isAuthenticated && (
           <IonTabButton tab="favorites" href="/tabs/favorites">
             <IonIcon aria-hidden="true" icon={heartOutline} />
@@ -108,6 +114,7 @@ const TabsNavigation: React.FC = () => {
           <IonIcon aria-hidden="true" icon={personOutline} />
           <IonLabel>Profil</IonLabel>
         </IonTabButton>
+        */}
       </IonTabBar>
     </IonTabs>
   );
@@ -150,6 +157,7 @@ const AppMinimal: React.FC = () => {
             {/* Pages hors tabs */}
             <Route exact path="/stats" component={StatsPage} />
             <Route exact path="/leaderboard" component={LeaderboardPage} />
+            <Route exact path="/settings" component={SettingsPage} />
 
             {/* Tabs navigation - DOIT être en dernier */}
             <Route path="/tabs" component={TabsNavigation} />

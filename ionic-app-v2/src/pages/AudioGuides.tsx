@@ -44,6 +44,7 @@ import {
 } from 'ionicons/icons';
 import { audioGuideService } from '../services/audioGuideService';
 import type { BackendAudioGuide as AudioGuide } from '../types/backend';
+import ProfileMenu from '../components/ProfileMenu';
 import './AudioGuides.css';
 
 const AudioGuidesPage: React.FC = () => {
@@ -211,6 +212,9 @@ const AudioGuidesPage: React.FC = () => {
             <IonBackButton defaultHref="/home" />
           </IonButtons>
           <IonTitle>AudioGuides</IonTitle>
+          <IonButtons slot="end">
+            <ProfileMenu />
+          </IonButtons>
         </IonToolbar>
 
         {/* Barre de recherche */}

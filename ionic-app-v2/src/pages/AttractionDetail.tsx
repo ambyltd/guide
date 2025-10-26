@@ -67,6 +67,7 @@ import type { BackendAttraction, BackendAudioGuide } from '../types/backend';
 import AudioPlayer from '../components/AudioPlayer';
 import MapWithGeofencing from '../components/MapWithGeofencing';
 import ReportReviewModal from '../components/ReportReviewModal';
+import ProfileMenu from '../components/ProfileMenu';
 // import ShareSheet, { type SharePlatform } from '../components/ShareSheet'; // DÉSACTIVÉ
 import { audioCacheService } from '../services/audioCacheService';
 import { reviewsService } from '../services/reviewsService';
@@ -637,6 +638,7 @@ const AttractionDetailPage: React.FC = () => {
               <IonIcon icon={shareOutline} />
             </IonButton>
             */}
+            <ProfileMenu />
           </IonButtons>
         </IonToolbar>
       </IonHeader>

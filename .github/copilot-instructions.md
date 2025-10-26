@@ -241,5 +241,42 @@ Application de découverte audio guide de la Côte d'Ivoire pour le marché euro
   - [x] **Tests & Docs (1800L)**: test-qr.html (600L), QR_CODE_TEST_GUIDE.md (1200L), QR_CODE_FEATURE_SUMMARY.md
   - [x] **Build**: npm run build réussi (27s, 21 entries precached)
   - [ ] **Tests device Android**: 11 tests (camera, scan FR/EN, torch, invalide, edge cases)
+- [x] **Sprint 7 - Navigation Restructuration (COMPLÉTÉ - 1h30)**
+  - [x] **App.tsx (Main Router) - MODIFIÉ**
+    - [x] Tab bar réduit de 5 à 3 tabs (Home, Map, AudioGuides)
+    - [x] Tabs Favorites et Profile retirés (accessible via ProfileMenu)
+    - [x] Route `/tabs/audioguides` ajoutée
+    - [x] Route `/settings` ajoutée (standalone)
+    - [x] Import `playCircleOutline` ajouté, `heartOutline`/`personOutline` retirés
+  - [x] **ProfileMenu Global (9 pages) - AJOUTÉ**
+    - [x] Home.tsx : ProfileMenu dans header (ligne 486)
+    - [x] Map.tsx : ProfileMenu après indicateur geofencing (ligne 475)
+    - [x] AudioGuides.tsx : ProfileMenu dans header (ligne 213)
+    - [x] AttractionDetail.tsx : ProfileMenu après bouton favori (ligne 641)
+    - [x] Favorites.tsx : ProfileMenu dans header + IonButtons import
+    - [x] Profile.tsx : ProfileMenu dans header (2 headers: logged/not logged)
+    - [x] StatsPage.tsx : ProfileMenu dans header (ligne 353)
+    - [x] LeaderboardPage.tsx : ProfileMenu dans header (ligne 177)
+    - [x] SettingsPage.tsx : ProfileMenu déjà présent (pas modifié)
+  - [x] **Dropdown Menu Items (ProfileMenu.tsx existant)**
+    - [x] Mes Favoris → `/tabs/favorites`
+    - [x] Statistiques → `/stats`
+    - [x] Classement (Achievements) → `/leaderboard`
+    - [x] Paramètres → `/settings`
+    - [x] Déconnexion → logout() + redirect login
+  - [x] **Settings Page (6 sections déjà implémentées)**
+    - [x] Mode sombre (toggle + localStorage persistence)
+    - [x] Notifications (toggle + permission request)
+    - [x] Langue (FR/EN selector)
+    - [x] Stockage Offline (cache stats + clear buttons)
+    - [x] Aide & Support (help center + contact)
+    - [x] À propos (version, terms, privacy, licenses)
+  - [x] **Build & Validation**
+    - [x] npm run build : 0 erreurs TypeScript ✅
+    - [x] Service Worker : 19 fichiers précachés (3.3 MB)
+    - [x] 10 fichiers modifiés, ~50 lignes ajoutées
+  - [x] **Documentation**
+    - [x] NAVIGATION_RESTRUCTURING_SUMMARY.md (700+ lignes)
+    - [x] NAVIGATION_TEST_GUIDE.md (400+ lignes)
 - [ ] Déploiement Production (Render.com + Netlify)
 - [ ] Tests et finalisations

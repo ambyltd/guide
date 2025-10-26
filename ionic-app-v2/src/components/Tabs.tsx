@@ -16,8 +16,8 @@ import {
   homeOutline,
   mapOutline,
   playCircleOutline,
-  personOutline,
-  heartOutline,
+  // personOutline, // RETIRÉ: Profile déplacé dans menu header
+  // heartOutline, // RETIRÉ: Favorites déplacé dans menu header
 } from 'ionicons/icons';
 
 /* Pages */
@@ -43,7 +43,7 @@ const Tabs: React.FC = () => {
         </Switch>
       </IonRouterOutlet>
 
-      {/* Barre de navigation */}
+      {/* Barre de navigation - 3 tabs uniquement */}
       <IonTabBar slot="bottom">
         <IonTabButton tab="home" href="/home">
           <IonIcon icon={homeOutline} />
@@ -60,6 +60,7 @@ const Tabs: React.FC = () => {
           <IonLabel>Guides</IonLabel>
         </IonTabButton>
 
+        {/* RETIRÉS: Favorites et Profile déplacés dans ProfileMenu header
         <IonTabButton tab="favorites" href="/favorites">
           <IonIcon icon={heartOutline} />
           <IonLabel>Favoris</IonLabel>
@@ -69,6 +70,7 @@ const Tabs: React.FC = () => {
           <IonIcon icon={personOutline} />
           <IonLabel>Profil</IonLabel>
         </IonTabButton>
+        */}
       </IonTabBar>
     </IonTabs>
   );
