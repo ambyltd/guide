@@ -66,13 +66,7 @@ const ProfileMenu: React.FC<ProfileMenuProps> = ({ className }) => {
         onClick={handleOpenPopover}
         className={`profile-menu-button ${className || ''}`}
       >
-        {isAuthenticated && user?.photoURL ? (
-          <IonAvatar className="profile-avatar">
-            <img src={user.photoURL} alt="Profile" />
-          </IonAvatar>
-        ) : (
-          <IonIcon icon={menuOutline} className="profile-icon" />
-        )}
+        <IonIcon icon={menuOutline} className="profile-icon" />
       </IonButton>
 
       <IonPopover
