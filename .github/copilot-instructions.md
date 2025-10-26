@@ -221,12 +221,25 @@ Application de découverte audio guide de la Côte d'Ivoire pour le marché euro
   - [x] **Tests & Docs (1180L)**: test-admin-features.js (330L), SPRINT5_ADMIN_PANEL.md (850L)
   - [x] **10 feature flags seeded**: social_sharing, advanced_stats, geofencing, offline_mode, background_sync, audio_cache, image_cache, push_notifications, dark_mode, beta_features
   - [x] **Statistiques**: 3395+ lignes, 13 fichiers, Build backend 0 erreurs, Build CMS warnings mineurs
-  - [x] **Administration**: Toggle features ON/OFF, Create/Edit/Delete, Analytics dashboard (6 stats cards, 4 charts)
+  - [x] **Administration**: Toggle features ON/OFF, Create/Edit/Delete, Analytics dashboard (6             stats cards, 4 charts)
 - [x] **Déploiement GitHub (COMPLÉTÉ - 15 min)**
   - [x] Repository créé: https://github.com/ambyltd/guide
   - [x] 567 fichiers poussés (91,930 insertions)
   - [x] Sécurité: firebase-service-account.json retiré, historique Git nettoyé
   - [x] Branch main, remote origin configuré
   - [x] Documentation: GITHUB_DEPLOY_SUCCESS.md, GUIDE_GITHUB_DEPLOY.md
+- [x] **Sprint 6 - QR Code Scanner (COMPLÉTÉ - 3h)**
+  - [x] **Backend (295L)**: qrCodeController.ts (260L), qrCode.ts routes (35L), index.ts modifié
+  - [x] **3 endpoints**: POST /api/qr/generate/:attractionId, GET /api/qr/scan, GET /api/qr/batch-generate
+  - [x] **Formats QR**: dataURL (base64), buffer (PNG download), svg (vectoriel)
+  - [x] **Deep link**: audioguide://attraction/{id}?lang={fr|en}&autoplay=true
+  - [x] **Mobile Scanner (700L)**: QRCodeScanner.tsx (320L), QRCodeScanner.css (200L), qrCodeService.ts (180L)
+  - [x] **Features scanner**: Camera preview, frame animé, torch control, validation format, navigation auto
+  - [x] **Integration Pages (~150L)**: Home.tsx (FAB button + modal), Map.tsx (FAB button + modal), AttractionDetail.tsx (auto-play logic)
+  - [x] **Auto-play logic**: useEffect détecte ?autoplay=true&language=fr → sélectionne audio → ouvre player → démarre lecture
+  - [x] **Permissions**: AndroidManifest.xml (CAMERA permission)
+  - [x] **Tests & Docs (1800L)**: test-qr.html (600L), QR_CODE_TEST_GUIDE.md (1200L), QR_CODE_FEATURE_SUMMARY.md
+  - [x] **Build**: npm run build réussi (27s, 21 entries precached)
+  - [ ] **Tests device Android**: 11 tests (camera, scan FR/EN, torch, invalide, edge cases)
 - [ ] Déploiement Production (Render.com + Netlify)
 - [ ] Tests et finalisations
