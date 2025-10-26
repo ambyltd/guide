@@ -33,6 +33,7 @@ import favoriteRoutes from './routes/favorites';
 import userStatsRoutes from './routes/userStats';
 import adminRoutes from './routes/admin'; // Sprint 5 - Admin Routes
 import featuresRoutes from './routes/features'; // Sprint 5 - Public Features Routes
+import qrCodeRoutes from './routes/qrCode'; // QR Code Scanner Routes
 
 // Middleware
 import { firebaseAuthMiddleware } from './middleware/authMiddleware';
@@ -51,7 +52,7 @@ const PORT = process.env.PORT || 5000;
 // Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100 // limit each IP to 100 requests per windowMs
+  max: 500 // Augmenté à 500 pour le développement (TODO: remettre à 100 en production)
 });
 
 // Middleware
@@ -114,6 +115,7 @@ app.use('/api', (req, res, next) => {
     '/gps/insights',
     '/analytics/dashboard',
     '/features',       // Sprint 5 - Public feature flags (mobile app)
+    '/qr',             // QR Code Scanner (génération et scan publics)
     '/reviews',        // Pour les tests (à sécuriser en production)
     '/users'           // Pour les tests (à sécuriser en production)
   ];
@@ -159,7 +161,8 @@ app.get('/', (req, res) => {
       gps: '/api/gps',
       analytics: '/api/analytics',
       admin: '/api/admin', // Sprint 5
-      features: '/api/features' // Sprint 5 - Public
+      features: '/api/features', // Sprint 5 - Public
+      qrCode: '/api/qr' // QR Code Scanner
     }
   });
 });
@@ -175,6 +178,7 @@ app.use('/api/gps', gpsRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/admin', adminRoutes); // Sprint 5 - Admin routes (auth required)
 app.use('/api/features', featuresRoutes); // Sprint 5 - Public features routes
+app.use('/api/qr', qrCodeRoutes); // QR Code Scanner routes
 app.use('/api', generalRoutes);
 
 // Error handling middleware

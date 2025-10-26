@@ -35,6 +35,7 @@ const favorites_1 = __importDefault(require("./routes/favorites"));
 const userStats_1 = __importDefault(require("./routes/userStats"));
 const admin_1 = __importDefault(require("./routes/admin")); // Sprint 5 - Admin Routes
 const features_1 = __importDefault(require("./routes/features")); // Sprint 5 - Public Features Routes
+const qrCode_1 = __importDefault(require("./routes/qrCode")); // QR Code Scanner Routes
 // Middleware
 const authMiddleware_1 = require("./middleware/authMiddleware");
 const analyticsMiddleware_1 = require("./middleware/analyticsMiddleware");
@@ -44,7 +45,7 @@ const PORT = process.env.PORT || 5000;
 // Rate limiting
 const limiter = (0, express_rate_limit_1.default)({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100 // limit each IP to 100 requests per windowMs
+    max: 500 // Augmenté à 500 pour le développement (TODO: remettre à 100 en production)
 });
 // Middleware
 app.use((0, helmet_1.default)());
@@ -102,6 +103,7 @@ app.use('/api', (req, res, next) => {
         '/gps/insights',
         '/analytics/dashboard',
         '/features', // Sprint 5 - Public feature flags (mobile app)
+        '/qr', // QR Code Scanner (génération et scan publics)
         '/reviews', // Pour les tests (à sécuriser en production)
         '/users' // Pour les tests (à sécuriser en production)
     ];
@@ -143,7 +145,8 @@ app.get('/', (req, res) => {
             gps: '/api/gps',
             analytics: '/api/analytics',
             admin: '/api/admin', // Sprint 5
-            features: '/api/features' // Sprint 5 - Public
+            features: '/api/features', // Sprint 5 - Public
+            qrCode: '/api/qr' // QR Code Scanner
         }
     });
 });
@@ -158,6 +161,7 @@ app.use('/api/gps', gps_1.default);
 app.use('/api/analytics', analytics_1.default);
 app.use('/api/admin', admin_1.default); // Sprint 5 - Admin routes (auth required)
 app.use('/api/features', features_1.default); // Sprint 5 - Public features routes
+app.use('/api/qr', qrCode_1.default); // QR Code Scanner routes
 app.use('/api', general_1.default);
 // Error handling middleware
 app.use(analyticsMiddleware_1.errorTrackingMiddleware);

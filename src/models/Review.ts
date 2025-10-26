@@ -4,6 +4,8 @@ export interface IReview extends Document {
   itemType: 'Attraction' | 'Tour' | 'AudioGuide';
   itemId: mongoose.Types.ObjectId;
   userId: mongoose.Types.ObjectId; // Lié au modèle User de l'app mobile
+  userName?: string; // Nom de l'utilisateur Firebase (dénormalisé pour performance)
+  userAvatar?: string; // Avatar de l'utilisateur Firebase (dénormalisé)
   rating: number;
   comment?: string;
   isModerated: boolean;
@@ -37,6 +39,12 @@ const reviewSchema = new Schema<IReview>({
   userId: { 
     type: Schema.Types.Mixed, // ✅ Accepte ObjectId ou String
     required: true 
+  },
+  userName: {
+    type: String // Nom de l'utilisateur (dénormalisé depuis Firebase)
+  },
+  userAvatar: {
+    type: String // URL avatar de l'utilisateur (dénormalisé depuis Firebase)
   },
   rating: { 
     type: Number, 

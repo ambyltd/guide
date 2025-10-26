@@ -140,21 +140,22 @@ exports.getUserFavorites = getUserFavorites;
 const checkFavorite = async (req, res) => {
     try {
         const { attractionId } = req.params;
-        // Utiliser le userId du token Firebase (authentification requise)
-        const userId = req.user?.uid;
+        const { userId } = req.query;
         if (!userId) {
-            return res.status(401).json({
+            return res.status(400).json({
                 success: false,
-                error: 'Authentification requise',
+                error: 'userId requis',
             });
         }
         const favorite = await Favorite_1.default.findOne({
-            userId,
+            userId: userId,
             attractionId: new mongoose_1.default.Types.ObjectId(attractionId),
         });
         res.json({
             success: true,
-            isFavorite: !!favorite,
+            data: {
+                isFavorite: !!favorite,
+            },
         });
     }
     catch (error) {

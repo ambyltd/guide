@@ -47,9 +47,14 @@ const reviewSchema = new mongoose_1.Schema({
         refPath: 'itemType' // Référence dynamique au modèle basé sur itemType
     },
     userId: {
-        type: mongoose_1.Schema.Types.ObjectId,
-        ref: 'User', // Assurez-vous d'avoir un modèle User pour les utilisateurs mobiles
+        type: mongoose_1.Schema.Types.Mixed, // ✅ Accepte ObjectId ou String
         required: true
+    },
+    userName: {
+        type: String // Nom de l'utilisateur (dénormalisé depuis Firebase)
+    },
+    userAvatar: {
+        type: String // URL avatar de l'utilisateur (dénormalisé depuis Firebase)
     },
     rating: {
         type: Number,

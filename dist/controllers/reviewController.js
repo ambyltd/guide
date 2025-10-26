@@ -59,7 +59,7 @@ const updateAverageRating = async (itemType, itemId) => {
  */
 const createReview = async (req, res) => {
     try {
-        const { itemId, itemType, rating, comment } = req.body;
+        const { itemId, itemType, rating, comment, userName, userAvatar } = req.body;
         // Utiliser l'UID Firebase
         const userId = req.user?.uid;
         if (!userId) {
@@ -85,6 +85,8 @@ const createReview = async (req, res) => {
             itemId,
             itemType,
             userId,
+            userName, // Dénormalisé depuis le frontend
+            userAvatar, // Dénormalisé depuis le frontend
             rating,
             comment,
         });
