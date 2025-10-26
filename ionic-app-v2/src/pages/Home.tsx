@@ -470,23 +470,32 @@ const HomePage: React.FC = () => {
           '--border-width': '0',
           '--min-height': '56px'
         }}>
-          <IonSearchbar
-            value={searchText}
-            onIonInput={(e) => setSearchText(e.detail.value || '')}
-            placeholder="Rechercher une attraction..."
-            animated
-            showCancelButton="focus"
-            style={{
-              '--background': 'white',
-              '--color': 'var(--ion-color-dark)',
-              '--placeholder-color': 'var(--ion-color-medium)',
-              '--icon-color': 'var(--ion-color-primary)',
-              '--border-radius': '12px',
-              '--box-shadow': '0 2px 8px rgba(0,0,0,0.1)',
-              padding: '8px 16px'
-            }}
-          />
-          <ProfileMenu slot="end" />
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '8px',
+            padding: '8px 16px'
+          }}>
+            <IonSearchbar
+              value={searchText}
+              onIonInput={(e) => setSearchText(e.detail.value || '')}
+              placeholder="Rechercher une attraction..."
+              animated
+              showCancelButton="focus"
+              style={{
+                '--background': 'white',
+                '--color': 'var(--ion-color-dark)',
+                '--placeholder-color': 'var(--ion-color-medium)',
+                '--icon-color': 'var(--ion-color-primary)',
+                '--border-radius': '12px',
+                '--box-shadow': '0 2px 8px rgba(0,0,0,0.1)',
+                flex: 1,
+                padding: 0,
+                margin: 0
+              }}
+            />
+            <ProfileMenu />
+          </div>
         </IonToolbar>
       </IonHeader>
 

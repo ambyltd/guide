@@ -14,14 +14,13 @@ import {
   IonAvatar,
 } from '@ionic/react';
 import {
-  menuOutline,
+  personOutline,
   heartOutline,
   statsChartOutline,
   trophyOutline,
   settingsOutline,
   logOutOutline,
   logInOutline,
-  personOutline,
 } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
@@ -66,7 +65,7 @@ const ProfileMenu: React.FC<ProfileMenuProps> = ({ className }) => {
         onClick={handleOpenPopover}
         className={`profile-menu-button ${className || ''}`}
       >
-        <IonIcon icon={menuOutline} className="profile-icon" />
+        <IonIcon icon={personOutline} className="profile-icon" />
       </IonButton>
 
       <IonPopover
