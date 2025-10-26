@@ -41,7 +41,7 @@ import {
 import {
   heartOutline,
   heart,
-  shareOutline,
+  // shareOutline, // DÉSACTIVÉ: Fonction de partage retirée
   locationOutline,
   timeOutline,
   star,
@@ -67,13 +67,13 @@ import type { BackendAttraction, BackendAudioGuide } from '../types/backend';
 import AudioPlayer from '../components/AudioPlayer';
 import MapWithGeofencing from '../components/MapWithGeofencing';
 import ReportReviewModal from '../components/ReportReviewModal';
-import ShareSheet, { type SharePlatform } from '../components/ShareSheet';
+// import ShareSheet, { type SharePlatform } from '../components/ShareSheet'; // DÉSACTIVÉ
 import { audioCacheService } from '../services/audioCacheService';
 import { reviewsService } from '../services/reviewsService';
 import { favoritesService } from '../services/favoritesService';
 import { userStatsService } from '../services/userStatsService';
 import { moderationService } from '../services/moderationService';
-import { socialShareService } from '../services/socialShareService';
+// import { socialShareService } from '../services/socialShareService'; // DÉSACTIVÉ
 import { useAuth } from '../hooks/useAuth';
 import 'leaflet/dist/leaflet.css';
 import './AttractionDetail.css';
@@ -362,6 +362,7 @@ const AttractionDetailPage: React.FC = () => {
     }
   };
 
+  /* DÉSACTIVÉ: Fonction de partage social
   // 🔗 Partager - Ouvrir le ShareSheet modal
   const handleShare = () => {
     setShowShareSheet(true);
@@ -407,6 +408,7 @@ const AttractionDetailPage: React.FC = () => {
       console.error('❌ Erreur partage:', error);
     }
   };
+  FIN DÉSACTIVÉ */
 
   // Navigation
   const goToMap = () => {
@@ -630,9 +632,11 @@ const AttractionDetailPage: React.FC = () => {
                 />
               </IonButton>
             )}
+            {/* DÉSACTIVÉ: Bouton de partage retiré
             <IonButton onClick={handleShare}>
               <IonIcon icon={shareOutline} />
             </IonButton>
+            */}
           </IonButtons>
         </IonToolbar>
       </IonHeader>
@@ -1118,13 +1122,14 @@ const AttractionDetailPage: React.FC = () => {
           }}
         />
 
-        {/* 🔗 ShareSheet Modal - Sprint 4 Phase 4 */}
+        {/* DÉSACTIVÉ: ShareSheet Modal - Sprint 4 Phase 4
         <ShareSheet
           isOpen={showShareSheet}
           onClose={() => setShowShareSheet(false)}
           onShare={handleSharePlatform}
           title="Partager cette attraction"
         />
+        */}
       </IonContent>
     </IonPage>
   );
