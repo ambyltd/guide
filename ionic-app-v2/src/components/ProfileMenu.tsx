@@ -14,13 +14,14 @@ import {
   IonAvatar,
 } from '@ionic/react';
 import {
-  personOutline,
+  menuOutline,
   heartOutline,
   statsChartOutline,
   trophyOutline,
   settingsOutline,
   logOutOutline,
   logInOutline,
+  personOutline,
 } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
@@ -70,7 +71,7 @@ const ProfileMenu: React.FC<ProfileMenuProps> = ({ className }) => {
             <img src={user.photoURL} alt="Profile" />
           </IonAvatar>
         ) : (
-          <IonIcon icon={personOutline} className="profile-icon" />
+          <IonIcon icon={menuOutline} className="profile-icon" />
         )}
       </IonButton>
 
