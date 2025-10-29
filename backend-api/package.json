@@ -14,6 +14,7 @@
     "backup": "npx tsx scripts/export-data.ts",
     "restore": "npx tsx scripts/import-data.ts",
     "restore:file": "npx tsx scripts/import-data.ts",
+    "create:admin": "npx tsx scripts/create-admin-user.ts",
     "test": "node test-api.js",
     "test:endpoints": "node test-all-endpoints.js",
     "test:advanced": "node test-advanced-api.js",

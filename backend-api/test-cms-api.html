@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test CMS API - Backend Local</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 1200px;
+      margin: 20px auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .container {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .section {
+      margin-bottom: 30px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #eee;
+    }
+    h1 {
+      color: #333;
+      margin-bottom: 10px;
+    }
+    h2 {
+      color: #666;
+      font-size: 18px;
+      margin-bottom: 15px;
+    }
+    button {
+      background: #1976d2;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-right: 10px;
+      font-size: 14px;
+    }
+    button:hover {
+      background: #1565c0;
+    }
+    button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    .success {
+      background: #4caf50;
+    }
+    .error {
+      background: #f44336;
+    }
+    input {
+      padding: 8px 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      margin-right: 10px;
+      width: 250px;
+    }
+    #status {
+      margin-top: 20px;
+      padding: 15px;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 12px;
+      white-space: pre-wrap;
+    }
+    #status.success {
+      background: #e8f5e9;
+      border: 1px solid #4caf50;
+      color: #2e7d32;
+    }
+    #status.error {
+      background: #ffebee;
+      border: 1px solid #f44336;
+      color: #c62828;
+    }
+    #status.info {
+      background: #e3f2fd;
+      border: 1px solid #2196f3;
+      color: #1565c0;
+    }
+    .endpoint {
+      background: #f5f5f5;
+      padding: 10px;
+      border-radius: 4px;
+      margin: 10px 0;
+      font-family: monospace;
+      font-size: 13px;
+    }
+    .token-info {
+      background: #fff3e0;
+      padding: 10px;
+      border-radius: 4px;
+      margin: 10px 0;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🧪 Test Backend API - CMS Dashboard</h1>
+    <p>Backend Local: <code>http://localhost:5000</code></p>
+
+    <!-- Section 1: Login -->
+    <div class="section">
+      <h2>1️⃣ Connexion Firebase Auth</h2>
+      <input type="email" id="email" placeholder="Email (admin@ambyl.fr)" value="admin@ambyl.fr">
+      <input type="password" id="password" placeholder="Mot de passe" value="Admin123!">
+      <button onclick="login()">Se connecter</button>
+      <button onclick="logout()" class="error">Se déconnecter</button>
+      <div id="auth-status" class="token-info" style="display:none; margin-top:10px;"></div>
+    </div>
+
+    <!-- Section 2: Test Endpoints -->
+    <div class="section">
+      <h2>2️⃣ Tests Endpoints API</h2>
+      
+      <div class="endpoint">GET /api/users</div>
+      <button onclick="testUsers()" id="btnUsers" disabled>Tester GET /api/users</button>
+      
+      <div class="endpoint" style="margin-top:15px;">GET /api/attractions</div>
+      <button onclick="testAttractions()">Tester GET /api/attractions</button>
+      
+      <div class="endpoint" style="margin-top:15px;">GET /api/tours</div>
+      <button onclick="testTours()">Tester GET /api/tours</button>
+      
+      <div class="endpoint" style="margin-top:15px;">GET /api/feature-flags</div>
+      <button onclick="testFeatureFlags()">Tester GET /api/feature-flags</button>
+    </div>
+
+    <!-- Section 3: Results -->
+    <div class="section">
+      <h2>3️⃣ Résultats</h2>
+      <div id="status" class="info">En attente de connexion...</div>
+    </div>
+  </div>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+
+  <script>
+    // Configuration Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyAWlPL4AOQYx59-cvXssikvouXCw4ryCXc",
+      authDomain: "ambyl-fr.firebaseapp.com",
+      projectId: "ambyl-fr",
+      storageBucket: "ambyl-fr.firebasestorage.app",
+      messagingSenderId: "283024094411",
+      appId: "1:283024094411:web:1ce3f672c4e1cc8aa5974e"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+
+    let currentToken = null;
+    let currentUser = null;
+
+    // Écouter les changements d'authentification
+    auth.onAuthStateChanged(async (user) => {
+      if (user) {
+        currentUser = user;
+        currentToken = await user.getIdToken();
+        
+        // Récupérer les custom claims
+        const tokenResult = await user.getIdTokenResult();
+        const role = tokenResult.claims.role || 'user';
+        
+        document.getElementById('auth-status').innerHTML = `
+          ✅ Connecté: ${user.email}<br>
+          👤 UID: ${user.uid}<br>
+          🔑 Rôle: ${role}<br>
+          🎫 Token: ${currentToken.substring(0, 50)}...
+        `;
+        document.getElementById('auth-status').style.display = 'block';
+        document.getElementById('btnUsers').disabled = false;
+        
+        showStatus(`✅ Connexion réussie!\nEmail: ${user.email}\nRôle: ${role}`, 'success');
+      } else {
+        currentUser = null;
+        currentToken = null;
+        document.getElementById('auth-status').style.display = 'none';
+        document.getElementById('btnUsers').disabled = true;
+        showStatus('ℹ️  Non connecté. Utilisez vos identifiants admin.', 'info');
+      }
+    });
+
+    async function login() {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      
+      if (!email || !password) {
+        showStatus('❌ Erreur: Email et mot de passe requis', 'error');
+        return;
+      }
+
+      try {
+        showStatus('🔄 Connexion en cours...', 'info');
+        const userCredential = await auth.signInWithEmailAndPassword(email, password);
+        // onAuthStateChanged se déclenchera automatiquement
+      } catch (error) {
+        showStatus(`❌ Erreur de connexion:\n${error.code}\n${error.message}`, 'error');
+      }
+    }
+
+    async function logout() {
+      try {
+        await auth.signOut();
+        showStatus('✅ Déconnexion réussie', 'success');
+      } catch (error) {
+        showStatus(`❌ Erreur de déconnexion: ${error.message}`, 'error');
+      }
+    }
+
+    async function testUsers() {
+      if (!currentToken) {
+        showStatus('❌ Erreur: Vous devez être connecté', 'error');
+        return;
+      }
+
+      try {
+        showStatus('🔄 Test GET /api/users...', 'info');
+        
+        const response = await fetch('http://localhost:5000/api/users', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${currentToken}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          showStatus(
+            `✅ GET /api/users - SUCCESS (${response.status})\n\n` +
+            `Nombre d'utilisateurs: ${data.data?.length || 0}\n\n` +
+            `Données reçues:\n${JSON.stringify(data, null, 2)}`,
+            'success'
+          );
+        } else {
+          showStatus(
+            `❌ GET /api/users - FAILED (${response.status})\n\n` +
+            `Erreur: ${data.message || 'Erreur inconnue'}\n\n` +
+            `Détails:\n${JSON.stringify(data, null, 2)}`,
+            'error'
+          );
+        }
+      } catch (error) {
+        showStatus(`❌ Erreur réseau:\n${error.message}`, 'error');
+      }
+    }
+
+    async function testAttractions() {
+      try {
+        showStatus('🔄 Test GET /api/attractions...', 'info');
+        
+        const response = await fetch('http://localhost:5000/api/attractions');
+        const data = await response.json();
+
+        if (response.ok) {
+          showStatus(
+            `✅ GET /api/attractions - SUCCESS (${response.status})\n\n` +
+            `Nombre d'attractions: ${data.data?.length || 0}\n\n` +
+            `Données reçues:\n${JSON.stringify(data, null, 2).substring(0, 500)}...`,
+            'success'
+          );
+        } else {
+          showStatus(
+            `❌ GET /api/attractions - FAILED (${response.status})\n\n` +
+            `Erreur: ${data.message}`,
+            'error'
+          );
+        }
+      } catch (error) {
+        showStatus(`❌ Erreur réseau:\n${error.message}`, 'error');
+      }
+    }
+
+    async function testTours() {
+      try {
+        showStatus('🔄 Test GET /api/tours...', 'info');
+        
+        const response = await fetch('http://localhost:5000/api/tours');
+        const data = await response.json();
+
+        if (response.ok) {
+          showStatus(
+            `✅ GET /api/tours - SUCCESS (${response.status})\n\n` +
+            `Nombre de tours: ${data.data?.length || 0}\n\n` +
+            `Données reçues:\n${JSON.stringify(data, null, 2).substring(0, 500)}...`,
+            'success'
+          );
+        } else {
+          showStatus(
+            `❌ GET /api/tours - FAILED (${response.status})\n\n` +
+            `Erreur: ${data.message}`,
+            'error'
+          );
+        }
+      } catch (error) {
+        showStatus(`❌ Erreur réseau:\n${error.message}`, 'error');
+      }
+    }
+
+    async function testFeatureFlags() {
+      try {
+        showStatus('🔄 Test GET /api/feature-flags...', 'info');
+        
+        const response = await fetch('http://localhost:5000/api/feature-flags');
+        const data = await response.json();
+
+        if (response.ok) {
+          showStatus(
+            `✅ GET /api/feature-flags - SUCCESS (${response.status})\n\n` +
+            `Nombre de feature flags: ${data.data?.length || 0}\n\n` +
+            `Données reçues:\n${JSON.stringify(data, null, 2)}`,
+            'success'
+          );
+        } else {
+          showStatus(
+            `❌ GET /api/feature-flags - FAILED (${response.status})\n\n` +
+            `Erreur: ${data.message}`,
+            'error'
+          );
+        }
+      } catch (error) {
+        showStatus(`❌ Erreur réseau:\n${error.message}`, 'error');
+      }
+    }
+
+    function showStatus(message, type) {
+      const statusDiv = document.getElementById('status');
+      statusDiv.textContent = message;
+      statusDiv.className = type;
+    }
+  </script>
+</body>
+</html>
