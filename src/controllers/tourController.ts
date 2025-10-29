@@ -53,7 +53,7 @@ export const getAllTours = async (req: Request, res: Response) => {
 
     res.json({
       success: true,
-      data: tours,
+      data: tours, // Array direct (pas wrapper)
       pagination: {
         page: parseInt(page as string),
         limit: parseInt(limit as string),

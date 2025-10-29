@@ -170,7 +170,8 @@ app.get('/', (req, res) => {
 app.use('/api/attractions', attractionRoutes);
 app.use('/api/audio-guides', audioGuideRoutes);
 app.use('/api/tours', tourRoutes);
-app.use('/api/users', userStatsRoutes);
+app.use('/api/users', userRoutes); // Routes pour gestion utilisateurs (CMS)
+app.use('/api/user-stats', userStatsRoutes); // Routes pour statistiques utilisateur
 app.use('/api/auth', authRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/favorites', favoriteRoutes);
